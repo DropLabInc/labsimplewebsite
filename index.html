@@ -910,7 +910,7 @@
 
         .leadership-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 2rem;
             padding: 0 1rem;
             position: relative;
@@ -1047,6 +1047,18 @@
                 width: 120px;
                 height: 120px;
                 margin-bottom: 1rem;
+            }
+            
+            /* Adjust leadership grid for tablets */
+            .leadership-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Adjust leadership grid for mobile */
+            .leadership-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             }
         }
 
@@ -1284,6 +1296,16 @@
             
             .text-section {
                 padding: 0.8rem 1rem; /* Consistent with container padding */
+            }
+        }
+
+        /* For very large screens, ensure exactly 5 columns */
+        @media (min-width: 1500px) {
+            .leadership-container {
+                max-width: 1500px;
+            }
+            .leadership-grid {
+                grid-template-columns: repeat(5, 1fr);
             }
         }
     </style>
@@ -1536,7 +1558,7 @@
             </div>
         </div>
         <div class="contact-section" id="contact">
-            <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/kam@droplab.co" method="POST">
+            <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/bd@cleu" method="POST">
                 <h2>Get in Touch</h2>
                 <!-- FormSubmit.co Configuration -->
                 <input type="hidden" name="_subject" value="New Contact Form Submission">
