@@ -53,6 +53,16 @@
             border-bottom: none;
             box-shadow: none;
             pointer-events: none; /* Allow clicks to pass through the bar itself */
+            transition: background-color 0.3s ease, background-image 0.3s ease; /* Add transition for smooth effect */
+        }
+
+        /* Add class for solid background when scrolled past animation */
+        .menu-bar.scrolled {
+            background-color: rgba(0, 0, 0, 0.9);
+            background-image: none;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
         .logo, .menu-buttons, .menu-button {
@@ -429,6 +439,14 @@
                 justify-content: space-between; /* Ensure space between logo and menu */
                 align-items: center;
                 width: 100%;
+            }
+            
+            /* Ensure scrolled state works on mobile */
+            .menu-bar.scrolled {
+                background-color: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             }
 
             .logo {
@@ -1579,6 +1597,7 @@
             const mainContainer = document.querySelector('.main-container');
             const textSections = document.querySelectorAll('.text-section');
             const listItems = document.querySelectorAll('.list-section');
+            const menuBar = document.querySelector('.menu-bar');
             
             // Function to find the next section or list item to scroll to
             function findNextPosition() {
@@ -1671,8 +1690,12 @@
                 // Only hide the arrow when we've scrolled past the main animation container
                 if (mainContainerBottom < 0) {
                     scrollArrow.classList.add('hide');
+                    // Add scrolled class to menu bar when past animation section
+                    menuBar.classList.add('scrolled');
                 } else {
                     scrollArrow.classList.remove('hide');
+                    // Remove scrolled class when in animation section
+                    menuBar.classList.remove('scrolled');
                 }
             });
             
