@@ -52,6 +52,11 @@
             backdrop-filter: none;
             border-bottom: none;
             box-shadow: none;
+            pointer-events: none; /* Allow clicks to pass through the bar itself */
+        }
+
+        .logo, .menu-buttons, .menu-button {
+            pointer-events: auto; /* Re-enable clicks on these elements */
         }
 
         .logo {
@@ -61,13 +66,25 @@
             opacity: 0.9;
             transition: opacity 0.3s ease;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .logo img {
             height: 100%;
             width: auto;
             filter: brightness(1);
+        }
+
+        .logo-tagline {
+            font-size: 0.7rem;
+            color: var(--light-text);
+            margin-top: 4px;
+            font-family: var(--animation-font);
+            letter-spacing: 0.5px;
+            opacity: 0.85;
+            font-weight: 400;
+            text-transform: uppercase;
         }
 
         .logo:hover {
@@ -154,16 +171,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
+            padding: 0; /* Remove padding */
+            overflow: hidden; /* Prevent overflow */
+            margin: 0; /* Ensure no margin */
         }
 
         .frame-section {
             position: sticky;
-            top: 60px;
+            top: 0; /* Remove top spacing */
             left: 0;
             width: 100%;
-            height: calc(100vh - 60px);
+            height: 100vh; /* Full viewport height */
             z-index: 10;
+            overflow: hidden; /* Prevent overflow */
+            margin: 0; /* Ensure no margin */
         }
 
         .frame-content {
@@ -204,12 +225,13 @@
         .text-container {
             width: 40%;
             height: 100%;
-            padding: 3rem;
+            padding: 0; /* Remove padding */
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: center;
             background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.8));
+            margin: 0; /* Ensure no margin */
         }
 
         .text-container h2, 
@@ -306,13 +328,14 @@
         /* Add styles for frame image */
         .frame-image {
             max-width: 100%;
-            max-height: 100%; /* Remove the calc(100% - 30px) to use full height */
+            max-height: 100vh; /* Scale to full viewport height */
             width: auto;
             height: auto;
             object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 0; /* Remove border radius */
+            box-shadow: none; /* Remove shadow */
             transition: opacity 0.2s ease;
+            margin: 0; /* Ensure no margin */
         }
 
         .scroll-text {
@@ -395,26 +418,39 @@
         @media (max-width: 768px) {
             /* Menu adjustments */
             .menu-bar {
-                padding: 0.8rem;
-                flex-direction: column;
+                padding: 0.8rem 1rem; /* Add more horizontal padding */
+                flex-direction: row; /* Change from column to row */
                 gap: 0.8rem;
                 background-color: transparent;
-                background-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+                background-image: none; /* Remove gradient background */
                 backdrop-filter: none;
                 border-bottom: none;
                 box-shadow: none;
+                justify-content: space-between; /* Ensure space between logo and menu */
+                align-items: center;
+                width: 100%;
             }
 
             .logo {
                 height: 30px;
                 margin-left: 0;
+                align-items: flex-start; /* Align logo content to the left */
+                max-width: 50%; /* Ensure logo doesn't take too much space */
+            }
+            
+            .logo-tagline {
+                font-size: 0.55rem; /* Make slightly smaller */
+                margin-top: 2px;
+                letter-spacing: 0.3px; /* Adjust letter spacing */
+                white-space: nowrap; /* Prevent wrapping */
             }
 
             .menu-buttons {
                 flex-wrap: wrap;
-                justify-content: center;
-                gap: 1rem;
+                justify-content: flex-end; /* Align to the right */
+                gap: 0.3rem; /* Reduce gap for mobile */
                 margin-right: 0;
+                max-width: 50%; /* Ensure menu doesn't take too much space */
             }
 
             .menu-button {
@@ -425,8 +461,10 @@
 
             /* Frame section adjustments */
             .frame-section {
-                top: 80px;
-                height: calc(100vh - 80px);
+                top: 0; /* Remove top spacing */
+                height: 100vh; /* Full viewport height */
+                margin: 0; /* Ensure no margin */
+                padding-top: 60px; /* Add padding to create space below the menu bar */
             }
 
             .frame-content {
@@ -435,27 +473,29 @@
 
             .frame-container {
                 width: 100%;
-                height: 60%;
-                padding: 1rem;
+                height: 65%;
+                padding: 0; /* Remove padding */
+                margin: 0; /* Ensure no margin */
             }
 
             /* Text container adjustments for mobile */
             .text-container {
                 width: 100%;
-                height: 40%;
-                padding: 1rem;
+                height: 35%;
+                padding: 0 1.5rem; /* Add horizontal padding */
                 background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95));
                 overflow: visible; /* Remove scrolling capability */
                 position: relative;
                 display: flex;
                 justify-content: center;
+                margin: 0; /* Ensure no margin */
                 /* Alignment is handled by the specific selectors for mobile */
             }
             
             /* Adjust text sections for mobile */
             .text-section {
                 position: absolute;
-                padding: 1rem;
+                padding: 1rem 1.5rem; /* Ensure consistent horizontal padding */
                 max-width: 100%;
                 opacity: 0;
                 transform: translateY(30px);
@@ -502,7 +542,10 @@
 
             .frame-image {
                 max-width: 100%;
-                max-height: calc(100% - 20px);
+                max-height: 100%; /* Use full height */
+                margin: 0; /* Ensure no margin */
+                border-radius: 0; /* Remove border radius */
+                box-shadow: none; /* Remove shadow */
             }
 
             /* Typography adjustments */
@@ -598,6 +641,38 @@
             
             .text-section[data-scroll="0.1"].active li.active-item {
                 font-size: 1.5rem;
+            }
+            
+            /* Additional menu adjustments for very small screens */
+            .menu-bar {
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .logo {
+                height: 25px;
+            }
+            
+            .logo-tagline {
+                font-size: 0.5rem;
+                margin-top: 1px;
+            }
+            
+            .menu-button {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.4rem;
+            }
+            
+            /* Adjust padding for smaller screens */
+            .frame-section {
+                padding-top: 50px; /* Slightly less padding on very small screens */
+            }
+            
+            .text-container {
+                padding: 0 1rem; /* Slightly less horizontal padding */
+            }
+            
+            .text-section {
+                padding: 0.8rem 1rem; /* Consistent with container padding */
             }
         }
 
@@ -761,21 +836,33 @@
             .frame-container {
                 width: 100%;
                 height: 65%;
-                padding: 1rem;
+                padding: 0; /* Remove padding */
+                margin: 0; /* Ensure no margin */
+            }
+            
+            /* Frame section adjustments for mobile */
+            .frame-section {
+                top: 0; /* Remove top spacing */
+                height: 100vh; /* Full viewport height */
+                margin: 0; /* Ensure no margin */
+                padding-top: 60px; /* Add padding to create space below the menu bar */
             }
             
             /* Text below animation */
             .text-container {
                 width: 100%;
                 height: 35%;
-                padding: 1rem;
+                padding: 0 1.5rem; /* Add horizontal padding */
                 background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95));
             }
             
-            /* Ensure frame image is properly sized */
+            /* Ensure frame image is properly sized for mobile */
             .frame-image {
                 max-width: 100%;
-                max-height: calc(100% - 30px);
+                max-height: 100%; /* Use full height */
+                margin: 0; /* Ensure no margin */
+                border-radius: 0; /* Remove border radius */
+                box-shadow: none; /* Remove shadow */
             }
         }
 
@@ -970,6 +1057,64 @@
             font-family: monospace;
         }
 
+        /* Scroll down arrow indicator */
+        .scroll-arrow {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            z-index: 100;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-arrow:before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 20px;
+            border-right: 3px solid var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            transform: rotate(45deg);
+            box-shadow: 0 0 8px rgba(255, 250, 214, 0.5);
+            border-radius: 2px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0) translateX(-50%);
+            }
+            40% {
+                transform: translateY(-10px) translateX(-50%);
+            }
+            60% {
+                transform: translateY(-5px) translateX(-50%);
+            }
+        }
+
+        /* Hide the arrow when scrolled down */
+        .scroll-arrow.hide {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-arrow {
+                bottom: 20px;
+                width: 25px;
+                height: 25px;
+            }
+
+            .scroll-arrow:before {
+                width: 15px;
+                height: 15px;
+                border-right: 2px solid var(--primary-color);
+                border-bottom: 2px solid var(--primary-color);
+            }
+        }
+
         /* Ensure only one item is visible at a time on mobile */
         @media (max-width: 768px) {
             /* Reset the default behavior for text sections */
@@ -1046,11 +1191,13 @@
         .frame-content > .text-container:last-of-type {
             align-items: flex-end;
             text-align: right;
+            padding-right: 2rem; /* Add right padding to ensure text isn't too close to the edge */
         }
 
         /* Right side text sections (keep as is - already right aligned) */
         .frame-content > .text-container:last-of-type .text-section {
             align-items: flex-end;
+            padding-right: 1rem; /* Add additional padding for text sections */
         }
 
         .frame-content > .text-container:last-of-type h2,
@@ -1058,6 +1205,7 @@
         .frame-content > .text-container:last-of-type ul,
         .frame-content > .text-container:last-of-type li {
             text-align: right;
+            margin-right: 0.5rem; /* Add a small right margin to list items */
         }
 
         /* Mobile overrides to center everything on small screens */
@@ -1066,11 +1214,13 @@
             .frame-content > .text-container:last-of-type {
                 text-align: center;
                 align-items: center;
+                padding-right: 0; /* Reset right padding on mobile */
             }
 
             .frame-content > .text-container:first-of-type .text-section,
             .frame-content > .text-container:last-of-type .text-section {
                 align-items: center;
+                padding-right: 0; /* Reset right padding on mobile */
             }
 
             .frame-content > .text-container:first-of-type h2,
@@ -1082,6 +1232,13 @@
             .frame-content > .text-container:last-of-type ul,
             .frame-content > .text-container:last-of-type li {
                 text-align: center;
+                margin-right: 0; /* Reset right margin on mobile */
+                margin-left: 0; /* Reset left margin on mobile */
+            }
+            
+            /* Text section padding */
+            .text-section {
+                padding: 1rem 1.5rem; /* Ensure consistent horizontal padding */
             }
         }
 
@@ -1096,6 +1253,19 @@
             .text-section[data-scroll="0.1"].active li.active-item {
                 font-size: 1.5rem;
             }
+            
+            /* Adjust padding for smaller screens */
+            .frame-section {
+                padding-top: 50px; /* Slightly less padding on very small screens */
+            }
+            
+            .text-container {
+                padding: 0 1rem; /* Slightly less horizontal padding */
+            }
+            
+            .text-section {
+                padding: 0.8rem 1rem; /* Consistent with container padding */
+            }
         }
     </style>
     <link rel="stylesheet" href="modals.css">
@@ -1105,6 +1275,7 @@
     <div class="menu-bar">
         <div class="logo">
             <img src="labsimple-logo-white.png" alt="LabSimple Logo">
+            <div class="logo-tagline">A CLEU Diagnostics Product</div>
         </div>
         <div class="menu-buttons">
         <a href="#" class="menu-button">Home</a>
@@ -1113,6 +1284,10 @@
         </div>
     </div>
     <div class="content-wrapper animation-in-progress">
+        <!-- Scroll down arrow indicator -->
+        <div class="scroll-arrow">
+        </div>
+        
         <div class="main-container">
             <div class="frame-section">
                 <div class="frame-content">
@@ -1138,7 +1313,7 @@
                             <h2>Intuitive Clinical Workflow</h2>
                         </div>
                         <div class="text-section" data-scroll="0.9">
-                            <h2>Now In The Palm of Your Hand</h2>
+                            <h2 style="font-weight:bold">Now In The Palm of Your Hand</h2>
                         </div>
                     </div>
                     <div class="frame-container">
@@ -1174,6 +1349,7 @@
                             <li class="list-section" data-scroll="0.63">Roll to roll</li>
                             <li class="list-section" data-scroll="0.64">Multi Channel</li>
                             <li class="list-section" data-scroll="0.65">Adaptable</li>
+                            <li class="list-section" data-scroll="0.65" style="font-weight:bold">Simple</li>
                         </ul>
 
                         <ul class="text-section extended-time" data-scroll="0.75">
@@ -1389,5 +1565,133 @@
     </div>
     <script src="scroll.js"></script>
     <script src="modals.js"></script>
+    
+    <!-- Script to handle the scroll arrow -->
+    <script>
+        // Ensure page scrolls to top on refresh
+        window.onbeforeunload = function() {
+            window.scrollTo(0, 0);
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const scrollArrow = document.querySelector('.scroll-arrow');
+            const mainContainer = document.querySelector('.main-container');
+            const textSections = document.querySelectorAll('.text-section');
+            const listItems = document.querySelectorAll('.list-section');
+            
+            // Function to find the next section or list item to scroll to
+            function findNextPosition() {
+                // Get current scroll position relative to the total height
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                
+                // First check if we're in a list section with active items
+                const activeListSections = Array.from(textSections).filter(section => 
+                    section.classList.contains('active') && section.querySelectorAll('li').length > 0);
+                
+                if (activeListSections.length > 0) {
+                    // Check if there's a next list item to show
+                    for (const section of activeListSections) {
+                        const sectionScrollValue = parseFloat(section.dataset.scroll);
+                        const items = section.querySelectorAll('li');
+                        const activeItems = Array.from(items).filter(item => item.classList.contains('active'));
+                        
+                        if (activeItems.length > 0) {
+                            // Find the item with the highest data-scroll value
+                            const currentItem = activeItems.reduce((prev, current) => {
+                                return parseFloat(prev.dataset.scroll) > parseFloat(current.dataset.scroll) ? prev : current;
+                            });
+                            
+                            // Find the next item in this section
+                            const currentItemValue = parseFloat(currentItem.dataset.scroll);
+                            let nextItem = null;
+                            
+                            for (const item of items) {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                if (itemScrollValue > currentItemValue && 
+                                    (!nextItem || itemScrollValue < parseFloat(nextItem.dataset.scroll))) {
+                                    nextItem = item;
+                                }
+                            }
+                            
+                            // If we found a next item, return its position
+                            if (nextItem) {
+                                return parseFloat(nextItem.dataset.scroll);
+                            }
+                        }
+                    }
+                }
+                
+                // If no next list item, find the next section
+                // Get all active sections
+                const activeSections = Array.from(textSections).filter(section => 
+                    section.classList.contains('active'));
+                
+                if (activeSections.length > 0) {
+                    // Find the section with the highest data-scroll value that's currently active
+                    const currentSection = activeSections.reduce((prev, current) => {
+                        return parseFloat(prev.dataset.scroll) > parseFloat(current.dataset.scroll) ? prev : current;
+                    });
+                    
+                    // Find the next section
+                    const currentScrollValue = parseFloat(currentSection.dataset.scroll);
+                    let nextSection = null;
+                    
+                    // Find the section with the next highest data-scroll value
+                    for (const section of textSections) {
+                        const sectionScrollValue = parseFloat(section.dataset.scroll);
+                        if (sectionScrollValue > currentScrollValue && 
+                            (!nextSection || sectionScrollValue < parseFloat(nextSection.dataset.scroll))) {
+                            nextSection = section;
+                        }
+                    }
+                    
+                    if (nextSection) {
+                        return parseFloat(nextSection.dataset.scroll);
+                    }
+                }
+                
+                // If we're at the end, go to the first section
+                // Find the section with the lowest data-scroll value
+                let firstSection = textSections[0];
+                for (const section of textSections) {
+                    if (parseFloat(section.dataset.scroll) < parseFloat(firstSection.dataset.scroll)) {
+                        firstSection = section;
+                    }
+                }
+                
+                return parseFloat(firstSection.dataset.scroll);
+            }
+            
+            // Hide arrow only when scrolled past the animation section
+            window.addEventListener('scroll', function() {
+                const mainContainerBottom = mainContainer.getBoundingClientRect().bottom;
+                
+                // Only hide the arrow when we've scrolled past the main animation container
+                if (mainContainerBottom < 0) {
+                    scrollArrow.classList.add('hide');
+                } else {
+                    scrollArrow.classList.remove('hide');
+                }
+            });
+            
+            // Scroll to next animation section or list item when arrow is clicked
+            scrollArrow.addEventListener('click', function() {
+                const nextScrollValue = findNextPosition();
+                
+                if (nextScrollValue !== null) {
+                    // Calculate the scroll position based on the data-scroll value
+                    const totalHeight = mainContainer.offsetHeight - window.innerHeight;
+                    const targetScrollPosition = nextScrollValue * totalHeight;
+                    
+                    // Scroll to the position
+                    window.scrollTo({
+                        top: targetScrollPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html> 

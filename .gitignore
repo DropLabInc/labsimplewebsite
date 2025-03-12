@@ -1,0 +1,41 @@
+# Ignore media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mp3
+*.wav
+*.ogg
+
+# Ignore Frames directory (contains animation frames)
+Frames/
+
+# Ignore headshots directory (contains team member images)
+headshots/
+
+# Ignore large binary files
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore logs
+*.log 
