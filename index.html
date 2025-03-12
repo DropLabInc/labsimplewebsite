@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Simple</title>
+    <!-- Add Google Fonts import for Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #fffad6;
+            --secondary-color: #004C97;
+            --text-color: #333333;
+            --light-text: rgba(255, 255, 255, 0.9);
+            --background-dark: #070707;
+            --menu-background: rgba(26, 26, 26, 0.95);
+            --animation-font: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            min-height: 100vh;
+            color: var(--light-text);
+            font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            overflow-y: scroll; /* Change to scroll */
+            margin: 0;
+            padding: 0;
+        }
+
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: transparent;
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+            padding: 1.2rem;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: none;
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+            margin-left: 2rem;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 100%;
+            width: auto;
+            filter: brightness(1);
+        }
+
+        .logo:hover {
+            opacity: 1;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 2.5rem;
+            margin-right: 2rem;
+        }
+
+        .menu-buttons a {
+            text-decoration: none;
+        }
+
+        .menu-button {
+            background: none;
+            color: var(--light-text);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            opacity: 0.9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: var(--animation-font);
+        }
+
+        .menu-button::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+            box-shadow: 0 0 8px rgba(255, 250, 214, 0.6);
+        }
+
+        .menu-button:hover {
+            color: #fff;
+            opacity: 1;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 5px rgba(255, 250, 214, 0.3);
+        }
+
+        .menu-button:hover::after {
+            width: 100%;
+        }
+
+        .menu-button.active {
+            color: #fff;
+            opacity: 1;
+        }
+
+        .menu-button.active::after {
+            width: 100%;
+            background-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 163, 224, 0.4);
+        }
+
+        .main-container {
+            position: relative;
+            width: 100%;
+            /* Increase height by 3x to make scrolling slower */
+            height: calc(100vh * 12);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.9));
+        }
+
+        .content-wrapper.animation-in-progress {
+            height: auto;
+            overflow: visible;
+        }
+
+        .frame-container {
+            width: 60%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .frame-section {
+            position: sticky;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            z-index: 10;
+        }
+
+        .frame-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-container {
+            width: 60%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .video-section {
+            position: sticky;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 80px);
+            z-index: 10;
+        }
+
+        .video-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-container {
+            width: 40%;
+            height: 100%;
+            padding: 3rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.8));
+        }
+
+        .text-container h2, 
+        .text-container h3,
+        .text-container ul,
+        .text-container li,
+        .text-section h2,
+        .text-section h3,
+        .text-section ul,
+        .text-section li {
+            font-family: var(--animation-font);
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-container ul {
+            list-style: none;
+            padding: 0;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            width: 100%;
+        }
+
+        .text-container h3{
+            font-size: 2.0rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        
+        .text-section {
+            position: absolute;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            max-width: 600px;
+            font-family: var(--animation-font);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .text-section li {
+            font-family: var(--animation-font);
+            font-size: 2.0rem;
+            color: #fff;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0.5rem 0;
+        }
+
+        .text-section ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-section h2 {
+            width: 100%;
+        }
+        
+        .text-section h3 {
+            width: 100%;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Add styles for frame image */
+        .frame-image {
+            max-width: 100%;
+            max-height: 100%; /* Remove the calc(100% - 30px) to use full height */
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.2s ease;
+        }
+
+        .scroll-text {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--light-text);
+            text-align: center;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50px;
+            opacity: 1;
+            transition: opacity 0.5s;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.3);
+            z-index: 100;
+            font-family: var(--animation-font);
+        }
+
+        .scroll-text.fade-out {
+            opacity: 0;
+        }
+
+        .completion-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--light-text);
+            text-align: center;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50px;
+            opacity: 1;
+            transition: opacity 0.5s;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.3);
+            z-index: 100;
+            font-family: var(--animation-font);
+        }
+
+        .completion-message.fade-out {
+            opacity: 0;
+        }
+
+        h2 {
+            font-family: var(--animation-font);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            width: 100%;
+        }
+
+        .text-section h3 {
+            text-align: right;
+            width: 100%;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: var(--light-text);
+            font-weight: 300;
+            opacity: 0.9;
+            font-family: var(--animation-font);
+        }
+
+        @media (max-width: 768px) {
+            /* Menu adjustments */
+            .menu-bar {
+                padding: 0.8rem;
+                flex-direction: column;
+                gap: 0.8rem;
+                background-color: transparent;
+                background-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+                backdrop-filter: none;
+                border-bottom: none;
+                box-shadow: none;
+            }
+
+            .logo {
+                height: 30px;
+                margin-left: 0;
+            }
+
+            .menu-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+                margin-right: 0;
+            }
+
+            .menu-button {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+            }
+
+            /* Frame section adjustments */
+            .frame-section {
+                top: 80px;
+                height: calc(100vh - 80px);
+            }
+
+            .frame-content {
+                flex-direction: column;
+            }
+
+            .frame-container {
+                width: 100%;
+                height: 60%;
+                padding: 1rem;
+            }
+
+            /* Text container adjustments for mobile */
+            .text-container {
+                width: 100%;
+                height: 40%;
+                padding: 1rem;
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95));
+                overflow: visible; /* Remove scrolling capability */
+                position: relative;
+                display: flex;
+                justify-content: center;
+                /* Alignment is handled by the specific selectors for mobile */
+            }
+            
+            /* Adjust text sections for mobile */
+            .text-section {
+                position: absolute;
+                padding: 1rem;
+                max-width: 100%;
+                opacity: 0;
+                transform: translateY(30px);
+                transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                height: auto;
+                max-height: 100%;
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                /* Alignment is handled by the specific selectors for mobile */
+            }
+            
+            /* Auto-scaling for sections with more content */
+            .text-section[data-scroll="0.4"], 
+            .text-section[data-scroll="0.55"],
+            .text-section[data-scroll="0.75"] {
+                transform-origin: center;
+                font-size: 0.9em;
+            }
+            
+            .text-section.active {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            
+            /* Adjust list styling for mobile */
+            .text-section ul,
+            .text-container ul {
+                padding-left: 0; /* Remove left padding to ensure proper centering */
+                margin-bottom: 0.8rem;
+                margin-top: 0.5rem;
+            }
+            
+            .text-section li,
+            .text-container li {
+                margin-bottom: 0.3rem;
+                font-size: 0.85rem;
+                line-height: 1.3;
+            }
+
+            .frame-image {
+                max-width: 100%;
+                max-height: calc(100% - 20px);
+            }
+
+            /* Typography adjustments */
+            h2 {
+                font-family: var(--animation-font);
+                font-size: 1.6rem;
+                margin-bottom: 0.8rem;
+                line-height: 1.3;
+                font-weight: 300; /* Ensure consistent font weight */
+            }
+
+            h2[style*="font-weight:bold"] {
+                font-size: 1.8rem;
+                font-weight: 600 !important; /* Force bold weight */
+            }
+
+            h3 {
+                font-size: 1.3rem;
+                margin-bottom: 0.7rem;
+                line-height: 1.3;
+            }
+
+            .text-section h3 {
+                font-size: 1.3rem;
+            }
+
+            .text-section[data-scroll="0.3"] h2,
+            .text-section[data-scroll="0.4"] h2 {
+                font-size: 1.8rem; /* Restore the font size */
+                font-weight: 600 !important; /* Force bold weight */
+            }
+
+            .text-section[data-scroll="0.3"] h3,
+            .text-section[data-scroll="0.4"] h3 {
+                font-size: 1.3rem;
+                margin-top: 0.3rem;
+            }
+
+            p {
+                font-size: 0.85rem;
+                margin-bottom: 0.8rem;
+                line-height: 1.4;
+            }
+
+            .scroll-text {
+                font-size: 0.8rem;
+                padding: 10px 20px;
+                bottom: 15px;
+            }
+
+            /* Center align text on mobile is now handled by the specific selectors above */
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            .text-section[data-scroll="0.4"], 
+            .text-section[data-scroll="0.55"],
+            .text-section[data-scroll="0.75"] {
+                font-size: 0.8em;
+            }
+            
+            .text-section ul,
+            .text-container ul {
+                padding-left: 1.2rem;
+            }
+            
+            .text-section li,
+            .text-container li {
+                margin-bottom: 0.2rem;
+                font-size: 0.8rem;
+                line-height: 1.2;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 0.6rem;
+            }
+
+            h2[style*="font-weight:bold"] {
+                font-size: 1.7rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Adjust list item sizes for very small screens */
+            .text-section.active li.active-item {
+                font-size: 1.4rem;
+                padding: 0.4rem;
+            }
+            
+            .text-section[data-scroll="0.1"].active li.active-item {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Contact Form Styles */
+        .contact-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(to bottom, var(--background-dark), #000);
+            width: 100%;
+            z-index: 20;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3rem;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            font-family: var(--animation-font);
+        }
+
+        .contact-form h2 {
+            margin-bottom: 2rem;
+            text-align: center;
+            font-family: var(--animation-font);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            font-family: var(--animation-font);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--light-text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: var(--animation-font);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 163, 224, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-family: var(--animation-font);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .form-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-message.success {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .form-message.error {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff0000;
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 768px) {
+            .contact-form {
+                padding: 2rem;
+            }
+        }
+
+        /* Mobile layout for frame animation */
+        @media (max-width: 768px) {
+            /* Stack frame content vertically on mobile */
+            .frame-content {
+                flex-direction: column;
+            }
+            
+            /* Make animation container larger */
+            .frame-container {
+                width: 100%;
+                height: 65%;
+                padding: 1rem;
+            }
+            
+            /* Text below animation */
+            .text-container {
+                width: 100%;
+                height: 35%;
+                padding: 1rem;
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95));
+            }
+            
+            /* Ensure frame image is properly sized */
+            .frame-image {
+                max-width: 100%;
+                max-height: calc(100% - 30px);
+            }
+        }
+
+        /* Leadership Section Styles */
+        .leadership-section {
+            position: relative;
+            padding: 6rem 2rem;
+            background: linear-gradient(to bottom, var(--background-dark), #000);
+            min-height: 100vh;
+            z-index: 20;
+        }
+
+        .leadership-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .leadership-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .leadership-header h2 {
+            font-family: var(--animation-font);
+        }
+
+        .leadership-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .team-member {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .team-member img {
+            width: 150px;
+            height: 150px;
+            border-radius: 10%;
+            margin-bottom: 1.5rem;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .team-member:hover img {
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.338);
+        }
+
+        .team-member:hover {
+            transform: scale(1.01);
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.338);
+            border-color: var(--primary-color);
+            z-index: 10;
+        }
+
+        .member-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .member-info::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .member-info::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .member-info::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .team-member:hover .member-info {
+            opacity: 0;
+            visibility: visible;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .member-info h4 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            font-weight: 500;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 1rem 0;
+        }
+
+        .member-info p {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            text-align: left;
+            opacity: 0.9;
+        }
+
+        .member-bio {
+            padding: 0.5rem;
+            margin-top: 0;
+        }
+
+        .member-bio p {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            text-align: left;
+            opacity: 0.9;
+        }
+
+        .team-member h3 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+            font-family: var(--animation-font);
+        }
+
+        .team-member p {
+            color: var(--light-text);
+            font-size: 1rem;
+            opacity: 0.8;
+            font-family: var(--animation-font);
+        }
+
+        @media (max-width: 768px) {
+            .team-member img {
+                width: 120px;
+                height: 120px;
+                margin-bottom: 1rem;
+            }
+        }
+
+        .progress-bar-container {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        
+        .frame-counter {
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
+        /* Ensure only one item is visible at a time on mobile */
+        @media (max-width: 768px) {
+            /* Reset the default behavior for text sections */
+            .text-section.active {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            
+            /* For list sections, hide all list items by default */
+            .text-section.active li {
+                opacity: 0;
+                display: none;
+                transition: opacity 0.5s ease;
+                font-family: var(--animation-font);
+            }
+            
+            /* Only show the active list item */
+            .text-section.active li.active-item {
+                opacity: 1;
+                display: block;
+                font-size: 1.5rem; /* Adjusted from 1.8rem to be smaller than h2 but larger than h3 */
+                text-align: center;
+                margin: 0 auto;
+                padding: 0.5rem;
+                font-family: var(--animation-font);
+            }
+            
+            /* Make list items in specific sections larger */
+            .text-section[data-scroll="0.1"].active li.active-item {
+                font-size: 1.6rem; /* Larger for the first list section */
+            }
+            
+            /* Center the list container on mobile */
+            .text-section[data-scroll="0.1"],
+            .text-section[data-scroll="0.4"],
+            .text-section[data-scroll="0.55"],
+            .text-section[data-scroll="0.75"] {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                padding: 0;
+                margin: 0 auto;
+                width: 100%;
+                height: auto;
+            }
+
+            /* Center align text on mobile is now handled by the specific selectors above */
+        }
+
+        .text-section li.active {
+            opacity: 1;
+        }
+
+        /* Left side text container */
+        .frame-content > .text-container:first-of-type {
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        /* Left side text sections */
+        .frame-content > .text-container:first-of-type .text-section {
+            align-items: flex-start;
+        }
+
+        .frame-content > .text-container:first-of-type h2,
+        .frame-content > .text-container:first-of-type h3,
+        .frame-content > .text-container:first-of-type ul,
+        .frame-content > .text-container:first-of-type li {
+            text-align: left;
+        }
+
+        /* Right side text container (keep as is - already right aligned) */
+        .frame-content > .text-container:last-of-type {
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        /* Right side text sections (keep as is - already right aligned) */
+        .frame-content > .text-container:last-of-type .text-section {
+            align-items: flex-end;
+        }
+
+        .frame-content > .text-container:last-of-type h2,
+        .frame-content > .text-container:last-of-type h3,
+        .frame-content > .text-container:last-of-type ul,
+        .frame-content > .text-container:last-of-type li {
+            text-align: right;
+        }
+
+        /* Mobile overrides to center everything on small screens */
+        @media (max-width: 768px) {
+            .frame-content > .text-container:first-of-type,
+            .frame-content > .text-container:last-of-type {
+                text-align: center;
+                align-items: center;
+            }
+
+            .frame-content > .text-container:first-of-type .text-section,
+            .frame-content > .text-container:last-of-type .text-section {
+                align-items: center;
+            }
+
+            .frame-content > .text-container:first-of-type h2,
+            .frame-content > .text-container:first-of-type h3,
+            .frame-content > .text-container:first-of-type ul,
+            .frame-content > .text-container:first-of-type li,
+            .frame-content > .text-container:last-of-type h2,
+            .frame-content > .text-container:last-of-type h3,
+            .frame-content > .text-container:last-of-type ul,
+            .frame-content > .text-container:last-of-type li {
+                text-align: center;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            /* Adjust list item sizes for very small screens */
+            .text-section.active li.active-item {
+                font-size: 1.4rem;
+                padding: 0.4rem;
+            }
+            
+            .text-section[data-scroll="0.1"].active li.active-item {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="modals.css">
+    <link rel="stylesheet" href="news.css">
+</head>
+<body>
+    <div class="menu-bar">
+        <div class="logo">
+            <img src="labsimple-logo-white.png" alt="LabSimple Logo">
+        </div>
+        <div class="menu-buttons">
+        <a href="#" class="menu-button">Home</a>
+        <a href="#leadership" class="menu-button">Leadership</a>
+        <a href="#contact" class="menu-button">Contact</a>
+        </div>
+    </div>
+    <div class="content-wrapper animation-in-progress">
+        <div class="main-container">
+            <div class="frame-section">
+                <div class="frame-content">
+                    <div class="text-container">
+                        <div class="text-section" data-scroll="0">
+                            <h2>Diagnostics. Made Simple.</h2>
+                        </div>
+                        <div class="text-section" data-scroll="0.2">
+                            <h2>Reimagining Lab Testing.</h2>
+                        </div>
+                        <div class="text-section" data-scroll="0.3">
+                            <h2 style="font-weight:bold">Introducing Solo</h2>
+                            <h3>A Generational Leap in Diagnostics.</h3>
+                        </div>
+                        <div class="text-section extended-time" data-scroll="0.4">
+                            <h2 style="font-weight:bold">At its CORE</h2>
+                            <h3>A Functional Powerhouse</h3>
+                        </div>
+                        <div class="text-section extended-time" data-scroll="0.55">
+                            <h2>Cartridges are</h2>
+                        </div>
+                        <div class="text-section extended-time" data-scroll="0.75">
+                            <h2>Intuitive Clinical Workflow</h2>
+                        </div>
+                        <div class="text-section" data-scroll="0.9">
+                            <h2>Now In The Palm of Your Hand</h2>
+                        </div>
+                    </div>
+                    <div class="frame-container">
+                        <img id="frameImage" class="frame-image" src="Frames/frame_00000.webp" alt="Video Frame">
+                    </div>
+                    <div class="text-container">
+                        
+                        <ul class="text-section" data-scroll="0.1">
+                            <li class="list-section" data-scroll="0.1">Simple</li>
+                            <li class="list-section" data-scroll="0.12">Portable</li>
+                            <li class="list-section" data-scroll="0.14">Low-Cost</li>
+                            <li class="list-section" data-scroll="0.16">Lab-Quality</li>
+                            <li class="list-section" data-scroll="0.18">Comprehensive</li>
+                        </ul>
+                        <ul class="text-section extended-time" data-scroll="0.4">
+                            <li class="list-section" data-scroll="0.42">Microscopy</li>
+                            <li class="list-section" data-scroll="0.43">Flow Cytometry</li>
+                            <li class="list-section" data-scroll="0.44">Chemistry</li>
+                            <li class="list-section" data-scroll="0.45">Immunoassay</li>
+                            <li class="list-section" data-scroll="0.46">Single Molecule Counting</li>
+                            <li class="list-section" data-scroll="0.47">Molecular Diagnostics</li>
+                            <li class="list-section" data-scroll="0.48">Spectroscopy</li>
+                        </ul>
+                        
+                        <ul class="text-section extended-time" data-scroll="0.55">
+                            <li class="list-section" data-scroll="0.56">Versatile</li>
+                            <li class="list-section" data-scroll="0.57">Easy to Use</li>
+                            <li class="list-section" data-scroll="0.58">Multiplexed</li>
+                            <li class="list-section" data-scroll="0.59">Ultra-Low Cost</li>
+                            <li class="list-section" data-scroll="0.60">Ultra Scalable</li>
+                            <li class="list-section" data-scroll="0.61">Variable Size</li>
+                            <li class="list-section" data-scroll="0.62">Multi-Layered</li>
+                            <li class="list-section" data-scroll="0.63">Roll to roll</li>
+                            <li class="list-section" data-scroll="0.64">Multi Channel</li>
+                            <li class="list-section" data-scroll="0.65">Adaptable</li>
+                        </ul>
+
+                        <ul class="text-section extended-time" data-scroll="0.75">
+                            <li class="list-section" data-scroll="0.78">EHR Connected</li>
+                            <li class="list-section" data-scroll="0.81">or</li>
+                            <li class="list-section" data-scroll="0.84">Standalone</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="leadership-section" id="leadership">
+            <div class="leadership-container">
+                <div class="leadership-header">
+                    <h2>Leadership Team</h2>
+                </div>
+                <div class="leadership-grid">
+                    <div class="team-member">
+                        <img src="headshots/Timothy.png" alt="Timothy Ladin">
+                        <h3>Timothy Ladin, JD</h3>
+                        <p>Chairman</p>
+                        <a href="https://www.linkedin.com/in/timothy-ladin-b22a8a3"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Tim Ladin has served as Chairman of the Board of CLEU Diagnostics since 2023. Mr. Ladin served for almost two decades as Vice President, General Counsel, and Chief Compliance Officer of MFP Investors LLC, MFP Partners, L.P., MFP Ventures, LLC, the Price Family Foundation, and related entities of the family office of Michael F. Price. Mr. Ladin also had previous roles as Counsel and Director of Business Development at Heart Corporation, where he engaged in venture capital and private equity investments, as well as mergers & acquisitions in early technology and internet companies, and started his career as a corporate transaction associate attorney at Clifford Chance, Rogers & Wells. In addition to legal, compliance, operations, and tax planning, Mr. Ladin manages a portfolio of venture capital, private equity, real estate and hedge fund investments, and regularly sits on boards to advise on capital financing, governance, mergers & acquisitions, and post-deal monitoring and dispute resolution. He currently serves as a board/committee member or observer for Decisive Point Group, LLC, K2 Integrity Holdings, Inc., Liquidnet Holdings, Inc., Madison Realty Capital Equity Fund I, LLC, Parvizi Surgical Innovations, LLC, and UniteUs, Inc. He received a J.D. from Georgetown University Law School in 1996 and a B.S. in Business Administration from University at Albany in 1993.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Andrew.png" alt="Andrew Fleischman">
+                        <h3>Andrew Fleischman, MD</h3>
+                        <p>Co-Founder, CEO</p>
+                        <a href="https://www.linkedin.com/in/andrew-fleischman-7a612b83"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. Andrew Fleischman is the founding CEO of CLEU Diagnostics, and is responsible for the vision and operations of the company. Dr. Fleischman is an accomplished physician-scientist and life sciences entrepreneur, having founded three successful companies since 2018 which have received over $16 million in funding from National Institute of Health. Dr. Fleischman received a M.D. from Thomas Jefferson University in 2015 and completed residency training in anesthesiology at Thomas Jefferson University Hospital. The inspiration for LabSimple comes from Dr. Fleischman's own hands-on experience working at various health systems in the Philadelphia area. In addition to leading the team in the development of the LabSimple platform, Dr. Fleischman is actively involved in drug discovery and clinical stage drug development. In 2021, Dr. Fleischman led a team of medicinal chemists to discover a breakthrough drug for sickle cell disease, which is now entering human clinical trials. As an experienced founder and company builder, Dr. Fleischman has broad experience in basic and clinical sciences, intellectual property, regulatory strategy and business development.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Javad.png" alt="Javad Parvizi">
+                        <a href="https://www.linkedin.com/in/javad-parvizi-2a0bb9b"></a>
+                        <h3>Javad Parvizi, MD</h3>
+                        <p>Co-Founder, Director</p>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. Javad Parvizi, MD, FRCS, is Co-Founder of CLEU Diagnostics and currently serves as a Director. Dr. Parvizi is a renowned surgeon and scientist with a career spanning over 25 years, most recently as Professor of Orthopedic Surgery at Acibadem University in Istanbul. Dr. Parvizi has earned worldwide recognition for his pioneering work in the management of periprosthetic joint infection and venous thromboembolism. Prior to joining Acibadem University, he served as the Director and Vice Chair of Research at the Rothman Institute. During his illustrious career, he has authored over 1,000 peer-reviewed scientific articles, penned 18 textbooks, and garnered over 100 awards from prestigious medical organizations worldwide. Dr. Parvizi has a stellar track record of securing research funding from prominent institutions, including the National Institutes of Health, Department of Defense, among others. After medical school, Dr. Parvizi completed training in cardiothoracic surgery in Great Britain. He then ventured to the United States in 1995, where he completed residency training in orthopedic surgery at Mayo Clinic. He also completed a prestigious fellowship on the management of hip disorders in young adults under the mentorship of Professor Reinhold Ganz at the Inselspital in Bern, Switzerland. In 2003, Dr. Parvizi joined the Rothman Orthopaedic Institute and held the position of James Edward Professor of Orthopedic Surgery at Sidney Kimmel School of Medicine until September 2023. Dr. Parvizi has served in leadership roles as president of the Musculoskeletal Infection Society (2013), Eastern Orthopedic Association (2018), and American Association of Hip and Knee Surgeons (AAHKS) ( 2023). Dr. Parvizi's dedication to education is exemplified by his training of over 2,000 research and clinical fellows and residents throughout his career. He continues to travel extensively, having visited more than 170 countries to deliver lectures and share his knowledge. His contributions have earned him honorary memberships in numerous global organizations. In 2017, Dr. Parvizi founded Parvizi Surgical Innovation (PSI) LLC, a highly successful incubator and accelerator for developing groundbreaking healthcare products that enhance patient care. CLEU Diagnostics was one of the first companies founded and incubated at Parvizi Surgical Innovation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/David.png" alt="David Kirschman">
+                        <a href="https://www.linkedin.com/in/david-kirschman-md-a4818b6"></a>
+                        <h3>David Kirschman, MD</h3>
+                        <p>Director</p>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. David Kirschman serves as a Director for CLEU Diagnostics. Dr. Kirschman is a former neurosurgeon and distinguished entrepreneur and operator with extensive experience in building medical device companies from product development to commercial sales & distribution. Dr. Kirschman previously founded X-spine Systems (now Xtant Medical), Orthophor (now part of BD), Aerobiotix, and, most recently, Orthomod. He holds over 80 issued US Patents for a wide range of medical devices. Dr. Kirschman received his BS in Biological Sciences from Colorado State University and M.D. from University of Colorado School of Medicine.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Fariba.png" alt="Fariba Kasemkhani">
+                        <h3>Fariba Kasemkhani</h3>
+                        <p>Director, VP of Finance</p>
+                        <a href="#"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Ms. Fariba Kasemkhani is one of the founding members of CLEU Diagnostics and has been with the company since inception. She has served in various leadership positions, including most recently Vice President of Finance. Ms. Kasemkhani is an Electrical Engineer by training with nearly two decades of experience working for IBM leading numerous chip design projects. While working with the Watson team on the Blue Gene series of supercomputers, she was team lead for Compute Chip Blue Gene/L, FPU developer for Blue Gene/P, and technical lead for Link Chip Blue Gene/Q. She has a vast knowledge of verification and debugging of complex ASIC, microprocessors, and semi-custom chip designs. In addition, she was a Logic Designer in Gaming Processor (Xbox 360, Wii and PS3). She was awarded numerous distinctions while working for IBM.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Scott.png" alt="Scott Kellog">
+                        <h3>Scott Kellog, MS, MBA</h3>
+                        <p>Chief Business Officer</p>
+                        <a href="https://www.linkedin.com/in/scott-c-kellogg"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Scott Kellogg serves as Chief Business Officer of CLEU Diagnostics. Mr. Kellogg is an accomplished medical technology executive, with a three-decade career of building first-in-kind life science products for the pharma, biotech, digital health, and medical device industries. Scott has succeeded in building med-tech businesses in digital therapy, ultrasound surgical modalities, non-invasive transdermal diagnostics, neurostimulation, and therapeutic drug-device combinations. An inventor and engineer at heart, Scott has delivered results in fast-paced R&D and product development environments, and is also experienced at handling all matters related to regulatory strategy, clinical operations, GMP manufacturing, and intellectual property. Scott is currently CEO of GEM-Biosciences, a company he co-founded with MIT Professors Robert Langer and Giovanni Traverso. GEM-Biosciences promises to revolutionize treatment for diabetic ulcers with its breakthrough technology for delivery of therapeutic gases to wounds. Scott previously served as CEO at Suono Bio, a company focused on oral and topical delivery of biologics and nucleic acid medicines. Prior to that, Scott served as SVP in charge of medical devices at Akili Interactive Labs, Inc, leading development and FDA clearance / CE certification of a first-in-class therapeutic mobile application for the treatment of pediatric ADHD. Before joining Akili, Scott was a founding team member at Follica Bio, Afferent, Corp., Sontra Medical, Inc., and UltraCision, Inc., serving as VP of Business Operations, VP of Product Development, VP of R&D, and Director of Engineering. Additionally, he served in engineering leadership roles at both Mentor Medical, Inc. and Ethicon Endo-Surgery, Inc., now both part of J&J.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Nigel.png" alt="Nigel Lindner">
+                        <h3>Nigel Lindner, PhD</h3>
+                        <p>Chief Innovation Officer</p>
+                        <a href="https://uk.linkedin.com/in/nigel-lindner-1a07538"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. Nigel Lindner brings a unique blend of scientific, R&D, and commercial expertise to his role as Chief Innovation Officer at CLEU Diagnostics. Nigel has a proven track record of delivering breakthrough products in a variety of industries, most notably professional and consumer diagnostics, having served previously in numerous senior management positions over three decades, including Chief Innovation Officer at LumiraDx, CEO of Swiss Precision Diagnostics, Vice President of Global R&D at Alere Inc, and key strategic roles at Unilever R&D. Dr. Lindner is a renowned expert and distinguished leader in the field of point-of-care diagnostics, serving as key stakeholder to bring about transformative change in the industry. In addition to his role at CLEU Diagnostics, Nigel is also Chairman and Chief Scientific Officer of InVita Intelligence Ltd, a Healthcare Software company. Dr. Lindner received his PhD in Biotechnology from University of Cambridge. B.S. in 1986.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Kam.png" alt="Kam Ghofrani">
+                        <h3>Kam Ghofrani</h3>
+                        <p>Head of Engineering</p>
+                        <a href="https://www.linkedin.com/in/kamghofrani/"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Kam Ghofrani has served as Head of Engineering for LabSimple since 2021. Leveraging his interdisciplinary expertise honed during his Nanotechnology Engineering studies at the University of Waterloo, Kam seamlessly integrates advanced microfluidics, electronics, and control systems into diagnostic devices. With a robust background in research—including pioneering contributions in microfluidics and quantum science—he drives system cohesion from assay development to software-level controls. Prior to LabSimple, Kam co-founded ventures in lab-on-chip technology and biomedical diagnostics, cementing his reputation as a leader in engineering innovation. Passionate about fusing multiple disciplines, he consistently develops compact, efficient solutions that enhance precision and performance in lab automation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Kunj.png" alt="Kunj Patel">
+                        <h3>Kunj Patel, MS</h3>
+                        <p>Project Management</p>
+                        <a href="https://www.linkedin.com/in/kunj-patel211/"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Kunj Patel has served as the Project Manager for LabSimple since 2022, focusing on program development from planning through execution. Kunj also heads quality assurance for in vitro diagnostic (IVD) products at CLEU Diagnostics. Kunj earned both her Bachelor's and Master's degrees in Mechanical Engineering from Embry-Riddle Aeronautical University, where she gained early experience in medical device development projects. She began her career as a Project Design Engineer at a med-tech startup specializing in patient-specific CMF/Orthopedic implants, developing expertise in quality management systems, product development, and business operations. 
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Bayan.png" alt="Bayan Mashrequi">
+                        <h3>Bayan Mashrequi, MS</h3>
+                        <p>Lead Product Engineer</p>
+                        <a href="https://www.linkedin.com/in/bmashrequi/"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Bayan Mashrequi has served as Lead Product Engineer for LabSimple since 2022. Bayan focuses on instrument design, system integration, and design for manufacturability. Bayan also has led development of advanced analytics and sensor technologies for the LabSimple core assembly. Bayan earned his Bachelor's degree in Industrial and Manufacturing Engineering from National University of Sciences and Technology and a Master's in Industrial Design from Rhode Island School of Design (RISD), graduating with the Thomas Edison award for his thesis. Passionate about fusing technology across multiple engineering disciplines, he specializes in developing products that optimize spatial efficiency, precision, and seamless integration. Bayan is a master when it comes to miniaturizing complex systems that require high density integration, and his skillset has clearly made its mark on the design of the LabSimple core module.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="news-section">
+            <div class="news-container">
+                <div class="news-header">
+                    <h2>News & Events</h2>
+                </div>
+                <div class="news-list">
+                    <div class="news-item">
+                        <img src="headshots/cropped/Nigel.png" alt="News Image" class="news-image">
+                        <div class="news-details">
+                            <p class="news-date">Wednesday, March 5th, 2025</p>
+                            <h3 class="news-headline">Former Alere and LumiraDx R&D Chief Nigel Lindner Joins CLEU Diagnostics to Launch Revolutionary LabSimple Diagnostic Platform.</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="contact-section" id="contact">
+            <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/kam@droplab.co" method="POST">
+                <h2>Get in Touch</h2>
+                <!-- FormSubmit.co Configuration -->
+                <input type="hidden" name="_subject" value="New Contact Form Submission">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="text" name="_honey" style="display: none;">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">
+                    Send Message
+                    <span class="loading-spinner" style="display: none;"></span>
+                </button>
+                <div class="form-message" id="formMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leadership Modal Layout -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <span class="prev">&lt;</span>
+            <span class="next">&gt;</span>
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="Member Image">
+                <h3 id="modalName"></h3>
+                <p id="modalTitle"></p>
+                <a id="modalLinkedIn" href="#" target="_blank">LinkedIn</a>
+                <div id="modalBio"></div>
+            </div>
+        </div>
+    </div>
+    <script src="scroll.js"></script>
+    <script src="modals.js"></script>
+</body>
+</html> 
