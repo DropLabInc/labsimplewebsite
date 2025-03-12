@@ -1308,6 +1308,61 @@
                 grid-template-columns: repeat(5, 1fr);
             }
         }
+
+        /* Footer Styles */
+        .footer-section {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 2rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 2rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .copyright p {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.5rem;
+            font-family: var(--animation-font);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
+            font-family: var(--animation-font);
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .footer-links {
+                margin-top: 1rem;
+            }
+        }
     </style>
     <link rel="stylesheet" href="modals.css">
     <link rel="stylesheet" href="news.css">
@@ -1558,7 +1613,7 @@
             </div>
         </div>
         <div class="contact-section" id="contact">
-            <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/bd@cleu" method="POST">
+            <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/bd@cleudx.com" method="POST">
                 <h2>Get in Touch</h2>
                 <!-- FormSubmit.co Configuration -->
                 <input type="hidden" name="_subject" value="New Contact Form Submission">
@@ -1588,6 +1643,21 @@
             </form>
         </div>
     </div>
+
+    <!-- Footer with copyright information -->
+    <footer class="footer-section">
+        <div class="footer-container">
+            <div class="copyright">
+                <p>&copy; 2024 CLEU Diagnostics, Inc. All rights reserved.</p>
+                <p>LabSimple™ is a trademark of CLEU Diagnostics, Inc.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
 
     <!-- Leadership Modal Layout -->
     <div id="memberModal" class="modal">
