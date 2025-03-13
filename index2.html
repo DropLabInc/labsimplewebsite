@@ -166,7 +166,7 @@
             position: relative;
             width: 100%;
             /* Increase height to make scrolling slower but ensure full animation */
-            height: calc(100vh * 20);
+            height: calc(100vh * 40);
             background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.9));
         }
 
@@ -480,7 +480,7 @@
                 text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
             }
 
-            /* Frame section adjustments */
+            /* Frame section adjustments for mobile */
             .frame-section {
                 top: 0; /* Remove top spacing */
                 height: 100vh; /* Full viewport height */
@@ -510,7 +510,6 @@
                 display: flex;
                 justify-content: center;
                 margin: 0; /* Ensure no margin */
-                /* Alignment is handled by the specific selectors for mobile */
             }
             
             /* Adjust text sections for mobile */
@@ -531,7 +530,6 @@
                 flex-direction: column;
                 justify-content: center;
                 background: transparent; /* Keep transparent on mobile too */
-                /* Alignment is handled by the specific selectors for mobile */
             }
             
             /* Auto-scaling for sections with more content */
@@ -562,9 +560,11 @@
                 line-height: 1.3;
             }
 
+            /* Ensure frame image is properly sized for mobile */
             .frame-image {
                 max-width: 100%;
-                max-height: 100%; /* Use full height */
+                height: 100%; /* Use full height of container */
+                width: auto; /* Allow width to adjust based on aspect ratio */
                 margin: 0; /* Ensure no margin */
                 border-radius: 0; /* Remove border radius */
                 box-shadow: none; /* Remove shadow */
@@ -876,10 +876,48 @@
                 width: 100%;
                 height: 35%;
                 padding: 0 1.5rem; /* Add horizontal padding */
-                background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95));
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95)); /* Keep background on mobile */
+                overflow: visible; /* Remove scrolling capability */
+                position: relative;
+                display: flex;
+                justify-content: center;
+                margin: 0; /* Ensure no margin */
             }
             
             /* Ensure frame image is properly sized for mobile */
+            .frame-image {
+                max-width: 100%;
+                height: 100%; /* Use full height of container */
+                width: auto; /* Allow width to adjust based on aspect ratio */
+                margin: 0; /* Ensure no margin */
+                border-radius: 0; /* Remove border radius */
+                box-shadow: none; /* Remove shadow */
+            }
+        }
+
+        /* Add a gradient overlay for mobile view */
+        @media (max-width: 768px) {
+            .frame-container {
+                width: 100%;
+                height: 65%;
+                padding: 0; /* Remove padding */
+                margin: 0; /* Ensure no margin */
+                position: relative; /* Add position relative for the pseudo-element */
+            }
+            
+            /* Add gradient overlay from top */
+            .frame-container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 25%; /* Increase height of the gradient */
+                background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.4) 60%, transparent 100%);
+                z-index: 15; /* Above the image but below controls */
+                pointer-events: none; /* Allow clicks to pass through */
+            }
+            
             .frame-image {
                 max-width: 100%;
                 max-height: 100%; /* Use full height */
@@ -1228,7 +1266,7 @@
         .frame-content > .text-container:last-of-type {
             align-items: flex-end;
             text-align: right;
-            padding-right: 2rem;
+            padding-right: 2rem; /* Add right padding to ensure text isn't too close to the edge */
             background: transparent; /* Make background transparent */
         }
 
@@ -1274,129 +1312,141 @@
                 margin-right: 0; /* Reset right margin on mobile */
                 margin-left: 0; /* Reset left margin on mobile */
             }
-            
-            /* Text section padding */
-            .text-section {
-                padding: 1rem 1.5rem; /* Ensure consistent horizontal padding */
-            }
         }
 
-        /* Extra small devices */
-        @media (max-width: 480px) {
-            /* Adjust list item sizes for very small screens */
-            .text-section.active li.active-item {
-                font-size: 1.4rem;
-                padding: 0.4rem;
-            }
-            
-            .text-section[data-scroll="0.1"].active li.active-item {
-                font-size: 1.5rem;
+        /* Medium screen breakpoint to prevent text overlapping with animation */
+        @media (min-width: 769px) and (max-width: 1400px) {
+            /* Adjust the frame content layout */
+            .frame-content {
+                position: relative;
+                padding: 0;
+                display: flex;
+                justify-content: center; /* Center content horizontally */
+                align-items: center;     /* Center content vertically */
+                overflow: visible;
+                height: 100vh;
             }
             
-            /* Adjust padding for smaller screens */
-            .frame-section {
-                padding-top: 50px; /* Slightly less padding on very small screens */
-            }
-            
-            .text-container {
-                padding: 0 1rem; /* Slightly less horizontal padding */
-            }
-            
-            .text-section {
-                padding: 0.8rem 1rem; /* Consistent with container padding */
-            }
-        }
-
-        /* For very large screens, ensure exactly 5 columns */
-        @media (min-width: 1500px) {
-            .leadership-container {
-                max-width: 1500px;
-            }
-            .leadership-grid {
-                grid-template-columns: repeat(5, 1fr);
-            }
-        }
-
-        /* Footer Styles */
-        .footer-section {
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 1rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 1rem;
-        }
-
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .copyright p {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 0.3rem;
-            font-family: var(--animation-font);
-        }
-        
-        .copyright a {
-            color: var(--primary-color);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .copyright a:hover {
-            color: #fff;
-            text-decoration: underline;
-        }
-
-        .footer-links {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .footer-container {
-                padding: 0 1rem;
-            }
-            
-            .copyright p {
-                font-size: 0.75rem;
-            }
-        }
-
-        /* Add a gradient overlay for mobile view */
-        @media (max-width: 768px) {
+            /* Animation container positioning - properly centered */
             .frame-container {
-                width: 100%;
-                height: 65%;
-                padding: 0; /* Remove padding */
-                margin: 0; /* Ensure no margin */
-                position: relative; /* Add position relative for the pseudo-element */
-            }
-            
-            /* Add gradient overlay from top */
-            .frame-container::before {
-                content: '';
                 position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 25%; /* Increase height of the gradient */
-                background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.4) 60%, transparent 100%);
-                z-index: 15; /* Above the image but below controls */
-                pointer-events: none; /* Allow clicks to pass through */
+                width: 60%;          /* Width of animation container */
+                max-width: 800px;    /* Maximum width to prevent it from getting too large */
+                height: auto;        /* Auto height to maintain aspect ratio */
+                top: 50%;           /* Position at vertical center */
+                left: 50%;          /* Position at horizontal center */
+                transform: translate(-50%, -50%); /* Center properly both horizontally and vertically */
+                z-index: 1;         /* Below text containers */
+                overflow: visible;   /* Allow overflow for smoother animations */
             }
             
-            .frame-image {
-                max-width: 100%;
-                max-height: 100%; /* Use full height */
-                margin: 0; /* Ensure no margin */
-                border-radius: 0; /* Remove border radius */
-                box-shadow: none; /* Remove shadow */
+            /* Canvas adjustments */
+            #frameCanvas, .frame-image {
+                width: 100%;        /* Full width of container */
+                height: auto;       /* Auto height to maintain aspect ratio */
+                object-fit: contain; /* Contain the image */
+                max-height: 80vh;   /* Prevent it from being too tall */
+                display: block;     /* Remove any inline spacing issues */
+                margin: 0 auto;     /* Center the canvas/image */
             }
+            
+            /* Left container adjustments */
+            .frame-content > .text-container:first-of-type {
+                position: absolute; /* Absolute positioning */
+                width: 25%;        /* Width of left text container */
+                top: 50%;          /* Position at vertical center */
+                left: 5%;          /* Position at left edge with margin */
+                transform: translateY(-50%); /* Center vertically */
+                z-index: 5;        /* Above animation */
+                padding-right: 15px; /* Right padding to prevent text from touching animation */
+                text-align: left;   /* Left align text */
+                background: transparent;
+                height: 80%;       /* Set a fixed height to contain absolute positioned children */
+                overflow: visible; /* Allow sections to be visible outside if needed */
+            }
+            
+            /* Right container adjustments */
+            .frame-content > .text-container:last-of-type {
+                position: absolute; /* Absolute positioning */
+                width: 25%;        /* Width of right text container */
+                top: 50%;          /* Position at vertical center */
+                right: 5%;         /* Position at right edge with margin */
+                transform: translateY(-50%); /* Center vertically */
+                z-index: 5;        /* Above animation */
+                padding-left: 15px; /* Left padding to prevent text from touching animation */
+                text-align: right;  /* Right align text */
+                background: transparent;
+                height: 80%;       /* Set a fixed height to contain absolute positioned children */
+                overflow: visible; /* Allow sections to be visible outside if needed */
+            }
+            
+            /* Fix text animations for medium screens - make them behave like desktop */
+            .text-section {
+                opacity: 0;
+                transform: translateY(calc(-50% + 30px)); /* Combine vertical centering with entrance animation */
+                transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Same transition as desktop */
+                padding: 0.5rem;
+                max-width: 100%;
+                margin-bottom: 0; /* Remove margin to prevent stacking */
+                position: absolute; /* Use absolute positioning like desktop */
+                left: 0;
+                right: 0;
+                top: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            .text-section.active {
+                opacity: 1;
+                transform: translateY(-50%); /* Exactly centered when active */
+                background-color: rgba(0,0,0,0.3); /* Lighter background */
+                border-radius: 4px;
+                padding: 8px;
+            }
+            
+            /* Font size adjustments - keep these for readability */
+            .text-section h2 {
+                font-size: 1.8rem;
+                line-height: 1.2;
+                margin-bottom: 0.3rem;
+                letter-spacing: -0.02em;
+            }
+            
+            .text-section h3 {
+                font-size: 1.2rem;
+                line-height: 1.3;
+                margin-top: 0.2rem;
+                font-weight: 300;
+            }
+            
+            /* List text adjustments - make them appear like desktop */
+            .text-container ul.text-section {
+                padding: 5px;
+            }
+            
+            .text-container ul.text-section li {
+                font-size: 1.1rem;
+                margin-bottom: 3px;
+                padding: 3px 0;
+                opacity: 0;
+                transform: translateY(15px); /* Smaller transform that doesn't affect parent positioning */
+                transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                            transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Same as desktop */
+            }
+            
+            .text-container ul.text-section li.active {
+                opacity: 1;
+                transform: translateY(0); /* Reset transform to normal position */
+            }
+        }
+
+        /* Wrapper around the entire scrolling experience */
+        .content-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
         }
     </style>
     <link rel="stylesheet" href="modals.css">
@@ -1423,53 +1473,50 @@
             <div class="frame-section">
                 <div class="frame-content">
                     <div class="text-container">
-                        <div class="text-section" data-scroll="0">
-                            <h2>Diagnostics. Made Simple.</h2>
+                        <div class="text-section" data-scroll="0.0" data-scroll-end="0.05">
+                            <h2>Diagnostics.</h2> <h2><strong>Made Simple.</strong></h2>
                         </div>
-                        <div class="text-section" data-scroll="0.2">
-                            <h2>Reimagining Lab Testing.</h2>
-                        </div>
-                        <div class="text-section" data-scroll="0.3">
+                        <div class="text-section" data-scroll="0.1" data-scroll-end="0.3">
                             <h2 style="font-weight:bold">Introducing Solo</h2>
                             <h3>A Generational Leap in Diagnostics.</h3>
                         </div>
-                        <div class="text-section extended-time" data-scroll="0.4">
+                        <div class="text-section extended-time" data-scroll="0.35" data-scroll-end="0.5">
                             <h2 style="font-weight:bold">At its CORE</h2>
                             <h3>A Functional Powerhouse</h3>
                         </div>
-                        <div class="text-section extended-time" data-scroll="0.55">
+                        <div class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.75">
                             <h2>Cartridges are</h2>
                         </div>
-                        <div class="text-section extended-time" data-scroll="0.75">
+                        <div class="text-section extended-time" data-scroll="0.75" data-scroll-end="0.85">
                             <h2>Intuitive Clinical Workflow</h2>
                         </div>
-                        <div class="text-section" data-scroll="0.9">
+                        <div class="text-section" data-scroll="0.9" data-scroll-end="1.0">
                             <h2 style="font-weight:bold">Now In The Palm of Your Hand</h2>
                         </div>
                     </div>
                     <div class="frame-container">
-                        <img id="frameImage" class="frame-image" src="Frames/frame_00000.webp" alt="Video Frame">
+                        <canvas id="frameCanvas" class="frame-image"></canvas>
                     </div>
                     <div class="text-container">
                         
-                        <ul class="text-section" data-scroll="0.1">
+                        <ul class="text-section" data-scroll="0.1" data-scroll-end="0.3">
                             <li class="list-section" data-scroll="0.1">Simple</li>
                             <li class="list-section" data-scroll="0.12">Portable</li>
                             <li class="list-section" data-scroll="0.14">Low-Cost</li>
                             <li class="list-section" data-scroll="0.16">Lab-Quality</li>
                             <li class="list-section" data-scroll="0.18">Comprehensive</li>
                         </ul>
-                        <ul class="text-section extended-time" data-scroll="0.4">
-                            <li class="list-section" data-scroll="0.42">Microscopy</li>
-                            <li class="list-section" data-scroll="0.43">Flow Cytometry</li>
-                            <li class="list-section" data-scroll="0.44">Chemistry</li>
-                            <li class="list-section" data-scroll="0.45">Immunoassay</li>
-                            <li class="list-section" data-scroll="0.46">Single Molecule Counting</li>
-                            <li class="list-section" data-scroll="0.47">Molecular Diagnostics</li>
-                            <li class="list-section" data-scroll="0.48">Spectroscopy</li>
+                        <ul class="text-section extended-time" data-scroll="0.35" data-scroll-end="0.5">
+                            <li class="list-section" data-scroll="0.36">Microscopy</li>
+                            <li class="list-section" data-scroll="0.37">Flow Cytometry</li>
+                            <li class="list-section" data-scroll="0.38">Chemistry</li>
+                            <li class="list-section" data-scroll="0.39">Immunoassay</li>
+                            <li class="list-section" data-scroll="0.40">Single Molecule Counting</li>
+                            <li class="list-section" data-scroll="0.41">Molecular Diagnostics</li>
+                            <li class="list-section" data-scroll="0.42">Spectroscopy</li>
                         </ul>
                         
-                        <ul class="text-section extended-time" data-scroll="0.55">
+                        <ul class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.75">
                             <li class="list-section" data-scroll="0.56">Versatile</li>
                             <li class="list-section" data-scroll="0.57">Easy to Use</li>
                             <li class="list-section" data-scroll="0.58">Multiplexed</li>
@@ -1480,13 +1527,13 @@
                             <li class="list-section" data-scroll="0.63">Roll to roll</li>
                             <li class="list-section" data-scroll="0.64">Multi Channel</li>
                             <li class="list-section" data-scroll="0.65">Adaptable</li>
-                            <li class="list-section" data-scroll="0.65" style="font-weight:bold">Simple</li>
+                            <li class="list-section" data-scroll="0.66" style="font-weight:bold">Simple</li>
                         </ul>
 
-                        <ul class="text-section extended-time" data-scroll="0.75">
+                        <ul class="text-section extended-time" data-scroll="0.75" data-scroll-end="0.85">
                             <li class="list-section" data-scroll="0.78">EHR Connected</li>
-                            <li class="list-section" data-scroll="0.81">or</li>
-                            <li class="list-section" data-scroll="0.84">Standalone</li>
+                            <li class="list-section" data-scroll="0.79">or</li>
+                            <li class="list-section" data-scroll="0.80">Standalone</li>
                         </ul>
                     </div>
                 </div>
@@ -1705,10 +1752,10 @@
             </div>
         </div>
     </div>
-    <script src="scroll.js"></script>
+    <!-- <script src="scroll.js"></script> -->
     <script src="modals.js"></script>
     
-    <!-- Script to handle the scroll arrow -->
+    <!-- Canvas Animation Script -->
     <script>
         // Ensure page scrolls to top on refresh
         window.onbeforeunload = function() {
@@ -1716,57 +1763,236 @@
         };
         
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM Content Loaded");
+            
+            // Get DOM elements
+            const canvas = document.getElementById('frameCanvas');
+            const context = canvas.getContext('2d');
             const scrollArrow = document.querySelector('.scroll-arrow');
             const mainContainer = document.querySelector('.main-container');
             const textSections = document.querySelectorAll('.text-section');
             const listItems = document.querySelectorAll('.list-section');
             const menuBar = document.querySelector('.menu-bar');
-            const frameImage = document.getElementById('frameImage');
             
             // Animation configuration
-            const totalFrames = 1050; // Total frames in the scroll animation
-            const loopFrames = 151;   // Total frames in the static loop animation
+            const totalFrames = 1050; // Total frames in the scroll animation (Dynamic folder)
+            const loopFrames = 150;   // Total frames in the static loop animation (Static folder)
             const loopFrameRate = 30; // Frames per second for the loop animation
+            const scrollTopThreshold = 50; // Threshold in pixels to consider as "top" for restarting animation
+            const scrollSensitivity = 1.0; // Adjust this value to make scrolling more or less sensitive (higher = less sensitive)
             
+            // Animation state
+            let loopImages = [];
+            let images = new Array(totalFrames); // Replace dynamicImages with a simple array
+            let imagesLoaded = 0;
             let isScrolling = false;  // Flag to track if user has started scrolling
             let loopAnimationId = null; // To store the animation frame ID
             let currentLoopFrame = 0;  // Current frame in the loop animation
             let lastScrollTop = 0;     // Last scroll position
+            let currentFrameIndex = 0; // Track current frame
+            let hasScrolledAway = false; // Flag to track if user has scrolled away from top
+            let isAtTop = true; // Flag to track if user is at the top
+            let loopAnimationActive = false; // Flag to track if loop animation is currently active
+            let hasBeenAtTop = false; // Flag to track if user has been at the top and then scrolled away
             
-            // Function to update the frame based on scroll position
-            function updateScrollFrame() {
-                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
-                const scrollRatio = window.scrollY / scrollHeight;
-                
-                // Calculate frame number based on scroll position
-                const frameNumber = Math.min(Math.floor(scrollRatio * totalFrames), totalFrames - 1);
-                
-                // Format the frame number with leading zeros
-                const paddedFrameNumber = String(frameNumber).padStart(5, '0');
-                
-                // Update the image source
-                if (frameImage) {
-                    frameImage.src = `Frames/frame_${paddedFrameNumber}.png`;
+            // Make the main container taller to control scrolling speed 
+            mainContainer.style.height = 'calc(100vh * 26.7)'; // This controls scroll sensitivity
+            
+            // Initialize canvas size with a default size until first image loads
+            canvas.width = 800;
+            canvas.height = 600;
+            
+            // Load a specific image
+            const loadImage = (index) => {
+                return new Promise((resolve, reject) => {
+                    if (images[index]) {
+                        resolve(images[index]);
+                        return;
+                    }
+                    
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        images[index] = img;
+                        
+                        // Set canvas size based on first image
+                        if (index === 0 && canvas.width === 800) {
+                            const scaleFactor = window.innerHeight / img.height;
+                            canvas.width = img.width * scaleFactor;
+                            canvas.height = window.innerHeight;
+                        }
+                        
+                        resolve(img);
+                    };
+                    
+                    img.onerror = () => {
+                        console.error(`Failed to load image: Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`);
+                        reject(new Error(`Failed to load image: Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`));
+                    };
+                    
+                    img.src = `Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`;
+                });
+            };
+            
+            // Load images in batches
+            const loadBatch = async (startIndex, count) => {
+                const promises = [];
+                for (let i = 0; i < count; i++) {
+                    if (startIndex + i < totalFrames) {
+                        promises.push(loadImage(startIndex + i));
+                    }
                 }
                 
-                // Update text sections based on scroll position
-                updateTextSections(scrollRatio);
+                await Promise.all(promises);
+                
+                // Load next batch
+                if (startIndex + count < totalFrames) {
+                    loadBatch(startIndex + count, 20);
+                }
+            };
+            
+            // Draw a specific frame to the canvas
+            const drawFrame = (index) => {
+                if (images[index] && images[index].complete) {
+                    // Clear canvas
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw the image centered and scaled to fill height
+                    const scaleFactor = canvas.height / images[index].height;
+                    const scaledWidth = images[index].width * scaleFactor;
+                    const xOffset = (canvas.width - scaledWidth) / 2;
+                    
+                    context.drawImage(
+                        images[index],
+                        xOffset, 0,
+                        scaledWidth, canvas.height
+                    );
+                    
+                    currentFrameIndex = index;
+                } else {
+                    // If image isn't loaded yet, load it
+                    loadImage(index).then(() => drawFrame(index));
+                }
+            };
+            
+            // Function to draw an image to the canvas with proper scaling
+            function drawImageToCanvas(img) {
+                if (!img || !img.complete) return;
+                
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculate scaling to fill viewport height
+                const scaleFactor = canvas.height / img.height;
+                const scaledWidth = img.width * scaleFactor;
+                
+                // Center the image horizontally if needed
+                const xOffset = (canvas.width - scaledWidth) / 2;
+                
+                // Draw the image scaled to fill height
+                context.drawImage(
+                    img,
+                    xOffset, 0,
+                    scaledWidth, canvas.height
+                );
+            }
+            
+            // Function to load the first image and set up canvas dimensions
+            function loadFirstImage() {
+                console.log("Loading first image from Static folder");
+                
+                const img = new Image();
+                img.onload = function() {
+                    // Adjust canvas size to match image aspect ratio
+                    // Scale to fill the viewport height
+                    const viewportHeight = window.innerHeight;
+                    const scaleFactor = viewportHeight / img.height;
+                    
+                    canvas.height = viewportHeight;
+                    canvas.width = img.width * scaleFactor;
+                    
+                    // Draw the image
+                    drawImageToCanvas(img);
+                    
+                    // Start preloading loop frames
+                    preloadLoopFrames();
+                    
+                    // Also start preloading dynamic frames
+                    preloadInitialDynamicFrames();
+                    
+                    // Add window resize handler
+                    window.addEventListener('resize', () => {
+                        const newViewportHeight = window.innerHeight;
+                        const newScaleFactor = newViewportHeight / img.height;
+                        
+                        canvas.height = newViewportHeight;
+                        canvas.width = img.width * newScaleFactor;
+                        
+                        // Redraw current frame with new dimensions
+                        if (isScrolling) {
+                            drawFrame(currentFrameIndex);
+                        } else if (loopImages[currentLoopFrame]) {
+                            drawImageToCanvas(loopImages[currentLoopFrame]);
+                        }
+                    });
+                };
+                
+                img.onerror = function() {
+                    console.error("Failed to load first image: Frames/Static/frame_00000.png");
+                };
+                
+                img.src = "Frames/Static/frame_00000.png";
+                loopImages[0] = img;
+            }
+            
+            // Preload loop animation frames
+            function preloadLoopFrames() {
+                console.log("Preloading loop frames from Static folder");
+                
+                for (let i = 1; i < loopFrames; i++) {
+                    const img = new Image();
+                    
+                    img.onload = function() {
+                        imagesLoaded++;
+                        
+                        // Start animation when all frames are loaded
+                        if (imagesLoaded >= loopFrames - 1) {
+                            console.log("All loop frames loaded, starting animation");
+                            playLoopAnimation();
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error(`Failed to load image: Frames/Static/frame_${i.toString().padStart(5, '0')}.png`);
+                    };
+                    
+                    img.src = `Frames/Static/frame_${i.toString().padStart(5, '0')}.png`;
+                    loopImages[i] = img;
+                }
+            }
+            
+            // Preload initial dynamic frames for smoother transition
+            function preloadInitialDynamicFrames() {
+                console.log("Preloading initial dynamic frames");
+                // Load first batch of images to start
+                loadBatch(0, 20);
             }
             
             // Function to play the looping animation
             function playLoopAnimation() {
-                // Stop the animation if user has started scrolling
-                if (isScrolling) {
+                // Set active flag
+                loopAnimationActive = true;
+                
+                // Stop the animation if user has started scrolling and not at the top
+                if (isScrolling && window.scrollY > scrollTopThreshold) {
+                    clearTimeout(loopAnimationId);
                     cancelAnimationFrame(loopAnimationId);
+                    loopAnimationActive = false;
                     return;
                 }
                 
-                // Format the frame number with leading zeros
-                const paddedFrameNumber = String(currentLoopFrame).padStart(5, '0');
-                
-                // Update the image source
-                if (frameImage) {
-                    frameImage.src = `Frames/frame_${paddedFrameNumber}.png`;
+                // Draw the current frame
+                if (loopImages[currentLoopFrame] && loopImages[currentLoopFrame].complete) {
+                    drawImageToCanvas(loopImages[currentLoopFrame]);
                 }
                 
                 // Increment frame counter and loop back to start if needed
@@ -1778,79 +2004,381 @@
                 }, 1000 / loopFrameRate);
             }
             
-            // Function to update text sections based on scroll position
-            function updateTextSections(scrollRatio) {
-                // Hide all sections first
-                textSections.forEach(section => {
-                    section.classList.remove('active');
-                });
-                
-                // Hide all list items
-                listItems.forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                // Find and show relevant sections based on scroll ratio
-                textSections.forEach(section => {
-                    const sectionScrollValue = parseFloat(section.dataset.scroll);
-                    
-                    // If this section should be visible at current scroll position
-                    if (Math.abs(scrollRatio - sectionScrollValue) < 0.1) {
-                        section.classList.add('active');
-                        
-                        // If this section has list items, show them sequentially
-                        const sectionItems = section.querySelectorAll('li');
-                        if (sectionItems.length > 0) {
-                            sectionItems.forEach(item => {
-                                const itemScrollValue = parseFloat(item.dataset.scroll);
-                                if (scrollRatio >= itemScrollValue) {
-                                    item.classList.add('active');
-                                    
-                                    // For mobile, also add active-item class to the most recent item
-                                    if (window.innerWidth <= 768) {
-                                        // Remove active-item from all items first
-                                        sectionItems.forEach(i => i.classList.remove('active-item'));
-                                        // Add to the most recent one
-                                        item.classList.add('active-item');
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
-                
-                // Update menu bar appearance based on scroll position
-                if (scrollRatio > 0.05) {
-                    menuBar.classList.add('scrolled');
-                } else {
-                    menuBar.classList.remove('scrolled');
+            // Function to stop all animations
+            function stopAllAnimations() {
+                // Stop the loop animation
+                if (loopAnimationId) {
+                    clearTimeout(loopAnimationId);
+                    cancelAnimationFrame(loopAnimationId);
+                    loopAnimationId = null;
                 }
                 
-                // Hide scroll arrow when scrolled down
-                if (scrollRatio > 0.1) {
-                    scrollArrow.classList.add('hide');
-                } else {
-                    scrollArrow.classList.remove('hide');
+                loopAnimationActive = false;
+            }
+            
+            // Function to restart the loop animation
+            function restartLoopAnimation() {
+                console.log("Restarting loop animation");
+                
+                // Stop any ongoing animations
+                stopAllAnimations();
+                
+                // Reset animation state
+                isScrolling = false;
+                isAtTop = true;
+                
+                // Do not reset hasScrolledAway flag completely - instead set hasBeenAtTop 
+                // to indicate we've been at the top and might scroll away again
+                hasBeenAtTop = true;
+                
+                // Reset loop frame to beginning
+                currentLoopFrame = 0;
+                
+                // Start the loop animation
+                playLoopAnimation();
+                
+                // Show the scroll arrow again
+                scrollArrow.classList.remove('hide');
+                
+                // Function to update text sections based on scroll position
+                function updateTextSections(scrollRatio) {
+                    // Process each text section
+                    textSections.forEach(section => {
+                        const startPosition = parseFloat(section.dataset.scroll || 0);
+                        const endPosition = parseFloat(section.dataset.scrollEnd || (startPosition + 0.1));
+                        
+                        // Use the same visibility logic for both desktop and medium screens
+                        // This makes medium screens behave more like desktop
+                        const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
+                        
+                        // Medium screen special handling (769px - 1400px)
+                        if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                            // Apply active class based on visibility - just like desktop
+                            if (isVisible) {
+                                section.classList.add('active');
+                                // Reset inline styles to let CSS handle animations
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            } else {
+                                section.classList.remove('active');
+                                // Reset any custom styles
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            }
+                        } else {
+                            // Mobile and large screen handling (unchanged)
+                            if (isVisible) {
+                                section.classList.add('active');
+                                // Reset any custom styles
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            } else {
+                                section.classList.remove('active');
+                                // Reset any custom styles
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            }
+                        }
+                        
+                        // For list sections, handle items sequentially regardless of screen size
+                        const sectionItems = section.querySelectorAll('li');
+                        if (sectionItems.length > 0) {
+                            // Use the same approach for list items on medium screens as desktop
+                            if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                                // Apply desktop-like behavior to medium screens
+                                sectionItems.forEach((item, index) => {
+                                    const itemScrollValue = parseFloat(item.dataset.scroll);
+                                    
+                                    // Simple visibility check like desktop - based on parent section visibility
+                                    if (isVisible && scrollRatio >= itemScrollValue) {
+                                        item.classList.add('active');
+                                        
+                                        // Keep the staggered animation, but simplify it
+                                        const delay = index * 100; // 100ms delay between items
+                                        item.style.transitionDelay = `${delay}ms`;
+                                    } else {
+                                        item.classList.remove('active');
+                                        item.style.transitionDelay = '0ms';
+                                    }
+                                });
+                            } else {
+                                // Mobile and large screens - unchanged
+                                sectionItems.forEach(item => {
+                                    const itemScrollValue = parseFloat(item.dataset.scroll);
+                                    
+                                    if (isVisible && scrollRatio >= itemScrollValue) {
+                                        item.classList.add('active');
+                                        
+                                        // For mobile, only show the most recent item
+                                        if (window.innerWidth <= 768) {
+                                            // Remove active-item from all items first
+                                            sectionItems.forEach(i => i.classList.remove('active-item'));
+                                            // Add to the most recent one
+                                            item.classList.add('active-item');
+                                        }
+                                    } else {
+                                        item.classList.remove('active');
+                                        if (window.innerWidth <= 768) {
+                                            item.classList.remove('active-item');
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
                 }
             }
             
-            // Listen for scroll events
-            window.addEventListener('scroll', function() {
-                // Check if this is the first scroll
-                if (!isScrolling && window.scrollY > 10) {
-                    isScrolling = true;
-                    // Stop the loop animation
-                    clearTimeout(loopAnimationId);
+            // Function to start the scroll animation
+            function startScrollAnimation() {
+                console.log('Starting scroll animation');
+                if (loopAnimationActive) {
+                    stopAllAnimations();
+                }
+                
+                isScrolling = true;
+                
+                // Update based on current scroll position
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                const frameNumber = Math.floor(scrollRatio * totalFrames);
+                
+                // Draw the frame
+                drawFrame(frameNumber);
+                
+                // Update text sections
+                updateTextSections(scrollRatio);
+            }
+            
+            // Preload nearby frames
+            function preloadNearbyFrames(currentFrame) {
+                // Define the lookahead distances
+                const lookAhead = 16;
+                const lookBehind = 6;
+                
+                // Determine scroll direction (default forward)
+                const direction = (window.scrollY > lastScrollTop) ? 1 : -1;
+                lastScrollTop = window.scrollY;
+                
+                // Prioritize preloading frames in scroll direction
+                for (let i = 1; i <= lookAhead; i++) {
+                    const nextFrame = currentFrame + (i * direction);
+                    if (nextFrame >= 0 && nextFrame < totalFrames) {
+                        loadImage(nextFrame);
+                    }
+                }
+                
+                // Also preload a few frames in the opposite direction
+                for (let i = 1; i <= lookBehind; i++) {
+                    const prevFrame = currentFrame - (i * direction);
+                    if (prevFrame >= 0 && prevFrame < totalFrames) {
+                        loadImage(prevFrame);
+                    }
+                }
+            }
+            
+            // Throttle function to limit how often a function can fire
+            function throttle(func, delay) {
+                let lastCall = 0;
+                return function(...args) {
+                    const now = performance.now();
+                    if (now - lastCall >= delay) {
+                        lastCall = now;
+                        return func.apply(this, args);
+                    }
+                };
+            }
+            
+            // Debounce function for events that should wait until activity stops
+            function debounce(callback, delay) {
+                let timeout;
+                
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => callback.apply(this, args), delay);
+                };
+            }
+            
+            // Handle scroll events with simple throttling
+            const simpleScrollHandler = throttle(function() {
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                
+                // Check if user is at the top
+                const wasAtTop = isAtTop;
+                isAtTop = window.scrollY <= scrollTopThreshold;
+                
+                // Check if user has scrolled away from top
+                if (!hasScrolledAway && window.scrollY > scrollTopThreshold) {
+                    hasScrolledAway = true;
+                }
+                
+                // Check if user has scrolled back to top after scrolling away
+                if (hasScrolledAway && isAtTop) {
+                    console.log('User scrolled back to top, restarting loop animation');
+                    if (!loopAnimationActive) {
+                        restartLoopAnimation();
+                    }
+                    return;
+                }
+                
+                // Check if user was at top and now scrolling down again
+                if ((wasAtTop && !isAtTop) || (hasBeenAtTop && !isAtTop && !isScrolling)) {
+                    console.log('User was at top and now scrolling down, starting scroll animation');
+                    hasBeenAtTop = false; // Reset this flag
+                    startScrollAnimation();
                 }
                 
                 // Only update frame based on scroll if user has started scrolling
-                if (isScrolling) {
-                    updateScrollFrame();
+                if (isScrolling && !isAtTop) {
+                    // Calculate frame number based on scroll position
+                    const frameNumber = Math.min(
+                        totalFrames - 1, 
+                        Math.floor(scrollRatio * totalFrames)
+                    );
+                    
+                    // Only update if the frame has changed
+                    if (frameNumber !== currentFrameIndex) {
+                        // Draw the frame
+                        drawFrame(frameNumber);
+                        
+                        // Preload nearby frames
+                        if (frameNumber % 5 === 0) { // Only preload every 5 frames for performance
+                            setTimeout(() => preloadNearbyFrames(frameNumber), 10);
+                        }
+                    }
+                    
+                    // Update text sections
+                    updateTextSections(scrollRatio);
+                }
+            }, 12); // ~83fps
+            
+            // Handle scroll events - simple and responsive
+            window.addEventListener('scroll', simpleScrollHandler, { passive: true });
+            
+            // Start by loading the first image
+            loadFirstImage();
+            
+            // Improved throttle function with leading and trailing options
+            function throttle(callback, delay, options = { leading: true, trailing: true }) {
+                let timeout = null;
+                let lastCall = 0;
+                let lastArgs = null;
+                
+                return function(...args) {
+                    const now = Date.now();
+                    const remaining = delay - (now - lastCall);
+                    
+                    lastArgs = args;
+                    
+                    // Execute immediately if leading edge or enough time has passed
+                    if (options.leading && (remaining <= 0 || remaining > delay)) {
+                        if (timeout) {
+                            clearTimeout(timeout);
+                            timeout = null;
+                        }
+                        lastCall = now;
+                        callback.apply(this, args);
+                    } else if (options.trailing && !timeout) {
+                        // Schedule a trailing call
+                        timeout = setTimeout(() => {
+                            lastCall = options.leading ? Date.now() : 0;
+                            timeout = null;
+                            callback.apply(this, lastArgs);
+                        }, remaining > 0 ? remaining : delay);
+                    }
+                };
+            }
+            
+            // Debounce function for events that should wait until activity stops
+            function debounce(callback, delay) {
+                let timeout;
+                
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => callback.apply(this, args), delay);
+                };
+            }
+            
+            // Handle scroll events with improved throttling
+            const newHandleScroll = throttle(function() {
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                
+                // Check if user is at the top
+                const wasAtTop = isAtTop;
+                isAtTop = window.scrollY <= scrollTopThreshold;
+                
+                // Check if user has scrolled away from top
+                if (!hasScrolledAway && window.scrollY > scrollTopThreshold) {
+                    hasScrolledAway = true;
+                }
+                
+                // Check if user has scrolled back to top after scrolling away
+                if (hasScrolledAway && isAtTop) {
+                    console.log('User scrolled back to top, restarting loop animation');
+                    if (!loopAnimationActive) {
+                        restartLoopAnimation();
+                    }
+                    return;
+                }
+                
+                // Check if user was at top and now scrolling down again
+                if ((wasAtTop && !isAtTop) || (hasBeenAtTop && !isAtTop && !isScrolling)) {
+                    console.log('User was at top and now scrolling down, starting scroll animation');
+                    hasBeenAtTop = false; // Reset this flag
+                    startScrollAnimation();
+                }
+                
+                // Only update frame based on scroll if user has started scrolling
+                if (isScrolling && !isAtTop) {
+                    const frameNumber = calculateScrollFrame();
+                    loadAndDrawScrollFrame(frameNumber);
+                    updateTextSections(scrollRatio);
                 }
                 
                 // Store the current scroll position
                 lastScrollTop = window.scrollY;
-            });
+            }, 12, { leading: true, trailing: true }); // 12ms throttle for ~83fps - higher responsiveness
+            
+            // Handle scroll end with debounce
+            const handleScrollEnd = debounce(function() {
+                // Always stop any ongoing animations when scrolling stops
+                if (scrollAnimationId) {
+                    cancelAnimationFrame(scrollAnimationId);
+                    scrollAnimationId = null;
+                    isScrollAnimationRunning = false;
+                }
+                
+                // Clear scroll metrics when scrolling stops to prevent further movement
+                scrollDirection = 0;
+                scrollVelocity = 0;
+                scrollFrameOffset = 0;
+                
+                // Check if user has scrolled back to top
+                if (window.scrollY <= scrollTopThreshold) {
+                    if (hasScrolledAway && !loopAnimationActive) {
+                        console.log('Scroll ended at top, restarting loop animation');
+                        restartLoopAnimation();
+                    }
+                } else if (isScrolling) {
+                    // Calculate the exact frame for the current scroll position WITHOUT any offsets
+                    const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                    const scrollRatio = window.scrollY / scrollHeight;
+                    const exactFrameNumber = Math.floor(scrollRatio * totalFrames);
+                    
+                    // Skip animation and force immediate display of the exact frame
+                    console.log(`Scroll stopped - displaying exact frame: ${exactFrameNumber}`);
+                    loadAndDrawScrollFrame(exactFrameNumber, true);
+                }
+            }, 100); // Reduced from 150ms to 100ms for faster response
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', function() {
+                // Use our new handleScroll instead of the original implementation
+                newHandleScroll();
+                handleScrollEnd();
+            }, { passive: true }); // Passive listener for better performance
             
             // Function to find the next section or list item to scroll to
             function findNextPosition() {
@@ -1940,8 +2468,12 @@
             scrollArrow.addEventListener('click', function() {
                 // Set scrolling flag to true
                 isScrolling = true;
+                hasScrolledAway = true;
+                isAtTop = false;
+                hasBeenAtTop = false;
+                
                 // Stop the loop animation
-                clearTimeout(loopAnimationId);
+                stopAllAnimations();
                 
                 const nextScrollValue = findNextPosition();
                 
@@ -1950,7 +2482,7 @@
                     const totalHeight = mainContainer.offsetHeight - window.innerHeight;
                     const targetScrollPosition = nextScrollValue * totalHeight;
                     
-                    // Scroll to the position
+                    // Scroll to the position with smooth behavior
                     window.scrollTo({
                         top: targetScrollPosition,
                         behavior: 'smooth'
@@ -1958,14 +2490,156 @@
                 }
             });
             
-            // Start the looping animation when the page loads
-            playLoopAnimation();
+            // Preload nearby frames when idle - improved version
+            function preloadNearbyFrames(currentFrame) {
+                // Define the lookahead direction based on scroll direction
+                // Default to forward (1) if no consistent direction is detected
+                // This ensures we don't flip-flop on tiny scroll changes
+                const direction = (scrollDirection !== 0) ? scrollDirection : 1; 
+                
+                // Use different lookahead distances based on direction
+                // but maintain some consistency even if direction changes temporarily
+                const lookAhead = Math.abs(scrollDirection) > 0 ? 16 : 10; // Double the lookahead frames (was 8)
+                const lookBehind = 6; // Double the lookbehind frames (was 3)
+                
+                if (window.requestIdleCallback) {
+                    window.requestIdleCallback(() => {
+                        // Prioritize preloading frames in scroll direction
+                        for (let i = 1; i <= lookAhead; i++) {
+                            const nextFrame = currentFrame + (i * direction);
+                            if (nextFrame >= 0 && nextFrame < totalFrames && !images[nextFrame]) {
+                                const img = new Image();
+                                img.src = `Frames/Dynamic/frame_${String(nextFrame).padStart(5, '0')}.webp`;
+                                images[nextFrame] = img;
+                            }
+                        }
+                        
+                        // Also preload a few frames in the opposite direction
+                        for (let i = 1; i <= lookBehind; i++) {
+                            const prevFrame = currentFrame - (i * direction);
+                            if (prevFrame >= 0 && prevFrame < totalFrames && !images[prevFrame]) {
+                                const img = new Image();
+                                img.src = `Frames/Dynamic/frame_${String(prevFrame).padStart(5, '0')}.webp`;
+                                images[prevFrame] = img;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Start by loading the first image
+            loadFirstImage();
             
             // Show the first text section by default
             if (textSections.length > 0) {
                 textSections[0].classList.add('active');
             }
+
+            // Throttle function for events that should not happen too frequently
+            function throttle(callback, delay) {
+                let lastTime = 0;
+                return function(...args) {
+                    const now = Date.now();
+                    if (now - lastTime >= delay) {
+                        callback.apply(this, args);
+                        lastTime = now;
+                    }
+                };
+            }
+            
+            // Function to update text sections based on scroll position
+            function updateTextSections(scrollRatio) {
+                // Process each text section
+                textSections.forEach(section => {
+                    const startPosition = parseFloat(section.dataset.scroll || 0);
+                    const endPosition = parseFloat(section.dataset.scrollEnd || (startPosition + 0.1));
+                    
+                    // Use the same visibility logic for both desktop and medium screens
+                    // This makes medium screens behave more like desktop
+                    const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
+                    
+                    // Medium screen special handling (769px - 1400px)
+                    if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                        // Apply active class based on visibility - just like desktop
+                        if (isVisible) {
+                            section.classList.add('active');
+                            // Reset inline styles to let CSS handle animations
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        } else {
+                            section.classList.remove('active');
+                            // Reset any custom styles
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        }
+                    } else {
+                        // Mobile and large screen handling (unchanged)
+                        if (isVisible) {
+                            section.classList.add('active');
+                            // Reset any custom styles
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        } else {
+                            section.classList.remove('active');
+                            // Reset any custom styles
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        }
+                    }
+                    
+                    // For list sections, handle items sequentially regardless of screen size
+                    const sectionItems = section.querySelectorAll('li');
+                    if (sectionItems.length > 0) {
+                        // Use the same approach for list items on medium screens as desktop
+                        if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                            // Apply desktop-like behavior to medium screens
+                            sectionItems.forEach((item, index) => {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                
+                                // Simple visibility check like desktop - based on parent section visibility
+                                if (isVisible && scrollRatio >= itemScrollValue) {
+                                    item.classList.add('active');
+                                    
+                                    // Keep the staggered animation, but simplify it
+                                    const delay = index * 100; // 100ms delay between items
+                                    item.style.transitionDelay = `${delay}ms`;
+                                } else {
+                                    item.classList.remove('active');
+                                    item.style.transitionDelay = '0ms';
+                                }
+                            });
+                        } else {
+                            // Mobile and large screens - unchanged
+                            sectionItems.forEach(item => {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                
+                                if (isVisible && scrollRatio >= itemScrollValue) {
+                                    item.classList.add('active');
+                                    
+                                    // For mobile, only show the most recent item
+                                    if (window.innerWidth <= 768) {
+                                        // Remove active-item from all items first
+                                        sectionItems.forEach(i => i.classList.remove('active-item'));
+                                        // Add to the most recent one
+                                        item.classList.add('active-item');
+                                    }
+                                } else {
+                                    item.classList.remove('active');
+                                    if (window.innerWidth <= 768) {
+                                        item.classList.remove('active-item');
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
         });
+    </script>
+    
+    <!-- Script to handle the scroll arrow -->
+    <script>
+        // This script is now integrated into the canvas animation script above
     </script>
 </body>
 </html> 

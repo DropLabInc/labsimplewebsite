@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .frame-image {
+            max-height: 100%;
+            max-width: 100%;
+        }
+        
+        .scroll-container {
+            height: 10000px; /* Very tall to ensure plenty of scroll space */
+            width: 100%;
+            position: relative;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #fffad6, #004C97);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        .frame-info {
+            color: white;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .loading-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        
+        .completion-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2000;
+            text-align: center;
+            font-size: 24px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .completion-message.show {
+            opacity: 1;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .control-button {
+            background: linear-gradient(90deg, #fffad6, #004C97);
+            border: none;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .scroll-indicator {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            z-index: 1000;
+        }
+        
+        .scroll-indicator-thumb {
+            width: 8px;
+            height: 20px;
+            background: linear-gradient(90deg, #fffad6, #004C97);
+            border-radius: 4px;
+            position: absolute;
+            top: 0;
+            transition: top 0.1s ease;
+        }
+        
+        .content-section {
+            position: absolute;
+            top: 100vh; /* Position below the animation */
+            left: 0;
+            width: 100%;
+            background: #000;
+            color: white;
+            padding: 20px;
+            z-index: 5;
+        }
+        
+        .scroll-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 1000;
+            font-size: 16px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-container" id="scrollContainer">
+        <div class="animation-container">
+            <canvas id="frameCanvas" class="frame-image"></canvas>
+        </div>
+        
+        <div class="content-section" id="contentSection">
+            <!-- Rest of content will be moved here -->
+        </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="controls">
+        <div>Animation Progress</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="frame-info" id="frameInfo">Frame: 0/0</div>
+        <div class="button-container">
+            <button class="control-button" id="playPauseBtn">Pause</button>
+            <button class="control-button" id="resetBtn">Reset</button>
+            <button class="control-button" id="skipBtn">Skip Animation</button>
+            <button class="control-button" id="autoScrollBtn">Auto-Scroll</button>
+        </div>
+    </div>
+    
+    <!-- Loading indicator -->
+    <div class="loading-indicator" id="loadingIndicator">Loading: 0%</div>
+    
+    <!-- Completion message -->
+    <div class="completion-message" id="completionMessage">
+        <div>Animation Complete!</div>
+        <div style="font-size: 16px; margin-top: 10px;">You can now scroll down to explore the rest of the content.</div>
+    </div>
+    
+    <!-- Scroll indicator -->
+    <div class="scroll-indicator">
+        <div class="scroll-indicator-thumb" id="scrollIndicatorThumb"></div>
+    </div>
+    
+    <!-- Scroll hint -->
+    <div class="scroll-hint" id="scrollHint">
+        Scroll down to advance frames<br>or use Auto-Scroll button
+    </div>
+
+    <script>
+        // Get DOM elements
+        const canvas = document.getElementById('frameCanvas');
+        const context = canvas.getContext('2d');
+        const progressBar = document.getElementById('progressBar');
+        const frameInfo = document.getElementById('frameInfo');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const completionMessage = document.getElementById('completionMessage');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const autoScrollBtn = document.getElementById('autoScrollBtn');
+        const scrollContainer = document.getElementById('scrollContainer');
+        const contentSection = document.getElementById('contentSection');
+        const scrollIndicatorThumb = document.getElementById('scrollIndicatorThumb');
+        const scrollHint = document.getElementById('scrollHint');
+        
+        // Animation configuration
+        const frameCount = 1050;
+        const currentFrame = index => `Frames/frame_${index.toString().padStart(5, '0')}.webp`;
+        
+        // Animation state
+        let images = new Array(frameCount);
+        let imagesLoaded = 0;
+        let currentFrameIndex = 0;
+        let isInitialized = false;
+        let isPlaying = true;
+        let animationComplete = false;
+        let autoScrollInterval = null;
+        
+        // Initialize canvas size with a default size until first image loads
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // Preload images in batches
+        const batchSize = 20;
+        
+        // Load a specific image
+        const loadImage = (index) => {
+            return new Promise((resolve, reject) => {
+                if (images[index]) {
+                    resolve(images[index]);
+                    return;
+                }
+                
+                const img = new Image();
+                
+                img.onload = () => {
+                    images[index] = img;
+                    imagesLoaded++;
+                    updateLoadingIndicator();
+                    
+                    // Set canvas size based on first image
+                    if (index === 0 && !isInitialized) {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        isInitialized = true;
+                        drawFrame(0);
+                    }
+                    
+                    resolve(img);
+                };
+                
+                img.onerror = () => {
+                    console.error(`Failed to load image: ${currentFrame(index)}`);
+                    reject(new Error(`Failed to load image: ${currentFrame(index)}`));
+                };
+                
+                img.src = currentFrame(index);
+            });
+        };
+        
+        // Load images in batches
+        const loadBatch = async (startIndex, count) => {
+            console.log(`Loading batch: frames ${startIndex} to ${startIndex + count - 1}`);
+            
+            const promises = [];
+            for (let i = 0; i < count; i++) {
+                if (startIndex + i < frameCount) {
+                    promises.push(loadImage(startIndex + i));
+                }
+            }
+            
+            await Promise.all(promises);
+            
+            // Load next batch
+            if (startIndex + count < frameCount) {
+                loadBatch(startIndex + count, batchSize);
+            }
+        };
+        
+        // Draw a specific frame
+        const drawFrame = (index) => {
+            if (images[index] && images[index].complete) {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(images[index], 0, 0);
+                currentFrameIndex = index;
+                updateProgressBar();
+                
+                // Check if animation is complete
+                if (index >= frameCount - 1 && !animationComplete) {
+                    animationComplete = true;
+                    showCompletionMessage();
+                    showContent();
+                }
+            } else {
+                // If image isn't loaded yet, load it and try again
+                loadImage(index).then(() => drawFrame(index));
+            }
+        };
+        
+        // Update loading indicator
+        const updateLoadingIndicator = () => {
+            const percentage = Math.round((imagesLoaded / frameCount) * 100);
+            loadingIndicator.textContent = `Loading: ${percentage}%`;
+            
+            if (imagesLoaded === frameCount) {
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                }, 1000);
+            }
+        };
+        
+        // Update progress bar
+        const updateProgressBar = () => {
+            const progress = (currentFrameIndex / (frameCount - 1)) * 100;
+            progressBar.style.width = `${progress}%`;
+            frameInfo.textContent = `Frame: ${currentFrameIndex}/${frameCount - 1}`;
+        };
+        
+        // Show completion message
+        const showCompletionMessage = () => {
+            completionMessage.classList.add('show');
+            setTimeout(() => {
+                completionMessage.classList.remove('show');
+            }, 3000);
+        };
+        
+        // Show content
+        const showContent = () => {
+            contentSection.style.display = 'block';
+        };
+        
+        // Update scroll indicator position
+        const updateScrollIndicator = (scrollFraction) => {
+            const maxTop = 80; // Height of scroll indicator minus thumb height
+            scrollIndicatorThumb.style.top = `${scrollFraction * maxTop}px`;
+        };
+        
+        // Handle scroll events with detailed logging
+        window.addEventListener('scroll', () => {
+            console.log('Scroll event detected');
+            
+            if (!isPlaying) {
+                console.log('Animation paused, ignoring scroll');
+                return;
+            }
+            
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            console.log(`Current scroll position: ${scrollTop}px`);
+            
+            // Make sure we're using a reasonable max scroll value
+            // This should be less than the actual scroll container height
+            // Increased by 4x to make scrolling slower (20000 instead of 5000)
+            const maxScroll = 80000; 
+            console.log(`Max scroll value: ${maxScroll}px`);
+            console.log(`Scroll container height: ${scrollContainer.scrollHeight}px`);
+            
+            const scrollFraction = Math.min(1, Math.max(0, scrollTop / maxScroll));
+            console.log(`Scroll fraction: ${scrollFraction.toFixed(4)}`);
+            
+            // Update scroll indicator
+            updateScrollIndicator(scrollFraction);
+            
+            // Calculate frame index based on scroll position
+            const targetFrameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
+            console.log(`Target frame index: ${targetFrameIndex}, Current frame index: ${currentFrameIndex}`);
+            
+            // Only update if the frame has changed
+            if (targetFrameIndex !== currentFrameIndex) {
+                console.log(`Updating to frame ${targetFrameIndex}`);
+                drawFrame(targetFrameIndex);
+            }
+        });
+        
+        // Auto-scroll functionality with slower speed
+        autoScrollBtn.addEventListener('click', () => {
+            if (autoScrollInterval) {
+                // Stop auto-scrolling
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+                autoScrollBtn.textContent = 'Auto-Scroll';
+            } else {
+                // Start auto-scrolling
+                autoScrollBtn.textContent = 'Stop Auto-Scroll';
+                let frame = currentFrameIndex;
+                
+                autoScrollInterval = setInterval(() => {
+                    frame++;
+                    if (frame >= frameCount) {
+                        clearInterval(autoScrollInterval);
+                        autoScrollInterval = null;
+                        autoScrollBtn.textContent = 'Auto-Scroll';
+                        return;
+                    }
+                    
+                    drawFrame(frame);
+                    
+                    // Update scroll position to match frame
+                    const scrollFraction = frame / frameCount;
+                    const scrollPosition = scrollFraction * maxScroll; // Use the maxScroll variable
+                    window.scrollTo({
+                        top: scrollPosition,
+                        behavior: 'auto'
+                    });
+                }, 200); // Increased from 50ms to 200ms (4x slower)
+            }
+        });
+        
+        // Play/Pause button
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            playPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
+        });
+        
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            drawFrame(0);
+        });
+        
+        // Skip animation button
+        skipBtn.addEventListener('click', () => {
+            drawFrame(frameCount - 1);
+            animationComplete = true;
+            showContent();
+            window.scrollTo({
+                top: 5000,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Hide scroll hint after 5 seconds
+        setTimeout(() => {
+            scrollHint.style.opacity = '0';
+            scrollHint.style.transition = 'opacity 1s ease';
+            setTimeout(() => {
+                scrollHint.style.display = 'none';
+            }, 1000);
+        }, 5000);
+        
+        // Move existing content to content section
+        window.addEventListener('load', () => {
+            // Find all content after the scroll container
+            const mainContent = document.querySelectorAll('body > *:not(#scrollContainer):not(.controls):not(.loading-indicator):not(.completion-message):not(.scroll-indicator):not(.scroll-hint):not(script)');
+            mainContent.forEach(element => {
+                contentSection.appendChild(element);
+            });
+        });
+        
+        // Start loading images
+        loadBatch(0, batchSize);
+        
+        // Add a debug button to test scrolling
+        const debugBtn = document.createElement('button');
+        debugBtn.className = 'control-button';
+        debugBtn.textContent = 'Debug';
+        debugBtn.style.marginLeft = '10px';
+        document.querySelector('.button-container').appendChild(debugBtn);
+        
+        debugBtn.addEventListener('click', () => {
+            console.log('=== SCROLL DEBUG INFO ===');
+            console.log(`Window height: ${window.innerHeight}px`);
+            console.log(`Document height: ${document.documentElement.scrollHeight}px`);
+            console.log(`Scroll container height: ${scrollContainer.scrollHeight}px`);
+            console.log(`Current scroll position: ${window.pageYOffset}px`);
+            console.log(`Body overflow: ${getComputedStyle(document.body).overflow}`);
+            console.log(`HTML overflow: ${getComputedStyle(document.documentElement).overflow}`);
+            console.log(`Is playing: ${isPlaying}`);
+            console.log(`Current frame: ${currentFrameIndex}`);
+            console.log(`Frames loaded: ${imagesLoaded}/${frameCount}`);
+            
+            // Test if scrolling works programmatically
+            console.log('Testing programmatic scroll...');
+            window.scrollTo({
+                top: 1000,
+                behavior: 'smooth'
+            });
+            
+            setTimeout(() => {
+                console.log(`After programmatic scroll: ${window.pageYOffset}px`);
+            }, 1000);
+        });
+        
+        // Fix potential issues with scroll container - make it taller for slower scrolling
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, fixing scroll container');
+            
+            // Define maxScroll as a global variable at the top of the script
+            window.maxScroll = 30000; // Very large value for slow scrolling
+            
+            // Make sure the scroll container is properly sized - based on maxScroll
+            scrollContainer.style.height = `${window.maxScroll}px`; // Set height to maxScroll
+            
+            // Ensure body and html can scroll
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
+            document.body.style.height = 'auto';
+            document.documentElement.style.height = 'auto';
+            
+            // Force a layout recalculation
+            scrollContainer.offsetHeight;
+            
+            console.log(`Scroll container height after fix: ${scrollContainer.scrollHeight}px`);
+            console.log(`Document height after fix: ${document.documentElement.scrollHeight}px`);
+            console.log(`Max scroll value: ${window.maxScroll}px`);
+        });
+        
+        // Add a manual frame navigation UI for testing
+        const frameNavigation = document.createElement('div');
+        frameNavigation.style.position = 'fixed';
+        frameNavigation.style.top = '20px';
+        frameNavigation.style.left = '20px';
+        frameNavigation.style.background = 'rgba(0,0,0,0.7)';
+        frameNavigation.style.padding = '10px';
+        frameNavigation.style.borderRadius = '5px';
+        frameNavigation.style.zIndex = '1000';
+        frameNavigation.style.display = 'flex';
+        frameNavigation.style.flexDirection = 'column';
+        frameNavigation.style.gap = '10px';
+        frameNavigation.innerHTML = `
+            <div style="color: white; text-align: center;">Manual Navigation</div>
+            <div style="display: flex; gap: 5px;">
+                <button id="prevFrame" style="flex: 1; padding: 5px;">◀ Prev</button>
+                <button id="nextFrame" style="flex: 1; padding: 5px;">Next ▶</button>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button id="prev10Frames" style="flex: 1; padding: 5px;">◀◀ -10</button>
+                <button id="next10Frames" style="flex: 1; padding: 5px;">+10 ▶▶</button>
+            </div>
+            <input type="range" id="frameSlider" min="0" max="${frameCount-1}" value="0" style="width: 100%;">
+        `;
+        document.body.appendChild(frameNavigation);
+        
+        // Add event listeners for manual navigation
+        document.getElementById('prevFrame').addEventListener('click', () => {
+            const newFrame = Math.max(0, currentFrameIndex - 1);
+            drawFrame(newFrame);
+            document.getElementById('frameSlider').value = newFrame;
+        });
+        
+        document.getElementById('nextFrame').addEventListener('click', () => {
+            const newFrame = Math.min(frameCount - 1, currentFrameIndex + 1);
+            drawFrame(newFrame);
+            document.getElementById('frameSlider').value = newFrame;
+        });
+        
+        document.getElementById('prev10Frames').addEventListener('click', () => {
+            const newFrame = Math.max(0, currentFrameIndex - 10);
+            drawFrame(newFrame);
+            document.getElementById('frameSlider').value = newFrame;
+        });
+        
+        document.getElementById('next10Frames').addEventListener('click', () => {
+            const newFrame = Math.min(frameCount - 1, currentFrameIndex + 10);
+            drawFrame(newFrame);
+            document.getElementById('frameSlider').value = newFrame;
+        });
+        
+        document.getElementById('frameSlider').addEventListener('input', (e) => {
+            const newFrame = parseInt(e.target.value);
+            drawFrame(newFrame);
+        });
+        
+        // Update the slider when frame changes
+        const originalUpdateProgressBar = updateProgressBar;
+        updateProgressBar = () => {
+            originalUpdateProgressBar();
+            document.getElementById('frameSlider').value = currentFrameIndex;
+        };
+        
+        // Add speed control slider
+        const speedControl = document.createElement('div');
+        speedControl.style.position = 'fixed';
+        speedControl.style.top = '20px';
+        speedControl.style.right = '20px';
+        speedControl.style.background = 'rgba(0,0,0,0.7)';
+        speedControl.style.padding = '10px';
+        speedControl.style.borderRadius = '5px';
+        speedControl.style.zIndex = '1000';
+        speedControl.style.display = 'flex';
+        speedControl.style.flexDirection = 'column';
+        speedControl.style.alignItems = 'center';
+        speedControl.innerHTML = `
+            <div style="color: white; margin-bottom: 5px;">Animation Speed</div>
+            <input type="range" id="speedSlider" min="1" max="10" value="2" style="width: 100px;">
+            <div id="speedValue" style="color: white; margin-top: 5px; font-size: 12px;">Speed: 0.25x</div>
+        `;
+        document.body.appendChild(speedControl);
+        
+        // Add event listener for speed slider
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            const speedValue = parseInt(e.target.value);
+            const actualSpeed = speedValue / 4; // Convert to a more intuitive scale
+            document.getElementById('speedValue').textContent = `Speed: ${actualSpeed.toFixed(2)}x`;
+            
+            // Update auto-scroll interval if it's running
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                
+                let frame = currentFrameIndex;
+                autoScrollInterval = setInterval(() => {
+                    frame++;
+                    if (frame >= frameCount) {
+                        clearInterval(autoScrollInterval);
+                        autoScrollInterval = null;
+                        autoScrollBtn.textContent = 'Auto-Scroll';
+                        return;
+                    }
+                    
+                    drawFrame(frame);
+                    
+                    // Update scroll position to match frame
+                    const scrollFraction = frame / frameCount;
+                    const scrollPosition = scrollFraction * window.maxScroll; // Use the global maxScroll
+                    window.scrollTo({
+                        top: scrollPosition,
+                        behavior: 'auto'
+                    });
+                }, 800 / speedValue); // Adjust interval based on speed
+            }
+        });
+        
+        // Add scroll speed control
+        const scrollSpeedControl = document.createElement('div');
+        scrollSpeedControl.style.position = 'fixed';
+        scrollSpeedControl.style.top = '100px';
+        scrollSpeedControl.style.right = '20px';
+        scrollSpeedControl.style.background = 'rgba(0,0,0,0.7)';
+        scrollSpeedControl.style.padding = '10px';
+        scrollSpeedControl.style.borderRadius = '5px';
+        scrollSpeedControl.style.zIndex = '1000';
+        scrollSpeedControl.style.display = 'flex';
+        scrollSpeedControl.style.flexDirection = 'column';
+        scrollSpeedControl.style.alignItems = 'center';
+        scrollSpeedControl.innerHTML = `
+            <div style="color: white; margin-bottom: 5px;">Scroll Sensitivity</div>
+            <input type="range" id="scrollSpeedSlider" min="1" max="10" value="2" style="width: 100px;">
+            <div id="scrollSpeedValue" style="color: white; margin-top: 5px; font-size: 12px;">Sensitivity: 0.25x</div>
+        `;
+        document.body.appendChild(scrollSpeedControl);
+        
+        // Add event listener for scroll speed slider
+        document.getElementById('scrollSpeedSlider').addEventListener('input', (e) => {
+            const scrollSpeedValue = parseInt(e.target.value);
+            const actualScrollSpeed = scrollSpeedValue / 4; // Convert to a more intuitive scale
+            document.getElementById('scrollSpeedValue').textContent = `Sensitivity: ${actualScrollSpeed.toFixed(2)}x`;
+            
+            // Update maxScroll based on sensitivity (lower sensitivity = higher maxScroll)
+            window.maxScroll = 80000 / actualScrollSpeed;
+            
+            // Update scroll container height
+            scrollContainer.style.height = `${window.maxScroll}px`;
+            
+            console.log(`Updated maxScroll to: ${window.maxScroll}px`);
+            console.log(`Updated scroll container height to: ${scrollContainer.style.height}`);
+        });
+    </script>
+</body>
+</html> 
