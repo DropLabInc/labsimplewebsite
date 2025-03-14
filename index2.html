@@ -941,6 +941,13 @@
             margin: 0 auto;
         }
 
+        /* Update leadership container for larger displays */
+        @media (min-width: 1600px) {
+            .leadership-container {
+                max-width: 1800px;
+            }
+        }
+
         .leadership-header {
             text-align: center;
             margin-bottom: 4rem;
@@ -958,21 +965,34 @@
             position: relative;
         }
 
+        /* Add a media query for large displays to show 5 columns */
+        @media (min-width: 1600px) {
+            .leadership-grid {
+                grid-template-columns: repeat(5, 1fr);
+                max-width: 1800px;
+                margin: 0 auto;
+            }
+        }
+
         .team-member {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 2rem;
             text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
-            cursor: pointer;
             overflow: hidden;
-            min-height: 150px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            cursor: pointer;
+        }
+
+        /* Adjust team member padding for larger displays with 5 columns */
+        @media (min-width: 1600px) {
+            .team-member {
+                padding: 1.5rem;
+            }
         }
 
         .team-member img {
@@ -1448,6 +1468,58 @@
             height: 100vh;
             overflow: hidden;
         }
+
+        /* Footer Styles */
+        .footer-section {
+            background-color: var(--background-dark);
+            padding: 1rem 0; /* Reduced padding */
+            text-align: center;
+            margin-top: 0; /* Removed top margin */
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Added to ensure vertical centering */
+        }
+
+        .copyright {
+            text-align: center;
+            width: 100%;
+        }
+
+        .copyright p {
+            font-size: 0.85rem; /* Slightly smaller font */
+            margin-bottom: 0.3rem; /* Further reduced spacing between lines */
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.3; /* Reduced line height */
+        }
+
+        .copyright a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .copyright a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .copyright p {
+                font-size: 0.8rem; /* Even smaller on mobile */
+                margin-bottom: 0.25rem; /* Even less spacing on mobile */
+            }
+        }
     </style>
     <link rel="stylesheet" href="modals.css">
     <link rel="stylesheet" href="news.css">
@@ -1730,8 +1802,7 @@
     <footer class="footer-section">
         <div class="footer-container">
             <div class="copyright">
-                <p>&copy; 2025 CLEU Diagnostics, Inc. All rights reserved.</p>
-                <p>LabSimple™ is a trademark of CLEU Diagnostics, Inc.</p>
+                <p>&copy; 2025 CLEU Diagnostics, Inc. All rights reserved. LabSimple™ is a trademark of CLEU Diagnostics, Inc.</p>
                 <p>Contact: <a href="mailto:bd@cleudx.com">bd@cleudx.com</a></p>
             </div>
         </div>
@@ -1781,6 +1852,10 @@
             const scrollTopThreshold = 50; // Threshold in pixels to consider as "top" for restarting animation
             const scrollSensitivity = 1.0; // Adjust this value to make scrolling more or less sensitive (higher = less sensitive)
             
+            // Memory management configuration
+            const maxCachedDynamicImages = 50; // Maximum number of dynamic images to keep in memory
+            const maxCachedLoopImages = 30;    // Maximum number of loop images to keep in memory
+            
             // Animation state
             let loopImages = [];
             let images = new Array(totalFrames); // Replace dynamicImages with a simple array
@@ -1793,7 +1868,10 @@
             let hasScrolledAway = false; // Flag to track if user has scrolled away from top
             let isAtTop = true; // Flag to track if user is at the top
             let loopAnimationActive = false; // Flag to track if loop animation is currently active
-            let hasBeenAtTop = false; // Flag to track if user has been at the top and then scrolled away
+            let hasBeenAtTop = true; // Set to true by default to ensure loop animation starts
+            
+            // Ensure we start at the top of the page
+            window.scrollTo(0, 0);
             
             // Make the main container taller to control scrolling speed 
             mainContainer.style.height = 'calc(100vh * 26.7)'; // This controls scroll sensitivity
@@ -1822,6 +1900,9 @@
                             canvas.height = window.innerHeight;
                         }
                         
+                        // Manage memory by clearing old images
+                        cleanupDynamicImageCache(index);
+                        
                         resolve(img);
                     };
                     
@@ -1834,10 +1915,78 @@
                 });
             };
             
+            // Function to clean up the dynamic image cache to save memory
+            function cleanupDynamicImageCache(currentIndex) {
+                // If we haven't exceeded the cache limit, no need to clean up
+                let loadedCount = 0;
+                for (let i = 0; i < images.length; i++) {
+                    if (images[i]) loadedCount++;
+                }
+                
+                if (loadedCount <= maxCachedDynamicImages) return;
+                
+                // Calculate the range of frames to keep (centered around current frame)
+                const halfRange = Math.floor(maxCachedDynamicImages / 2);
+                const keepStart = Math.max(0, currentIndex - halfRange);
+                const keepEnd = Math.min(totalFrames - 1, currentIndex + halfRange);
+                
+                // Clear images outside the keep range
+                for (let i = 0; i < totalFrames; i++) {
+                    if (i < keepStart || i > keepEnd) {
+                        if (images[i]) {
+                            // Set src to empty to help garbage collection
+                            images[i].src = '';
+                            images[i] = null;
+                        }
+                    }
+                }
+                
+                // Force garbage collection hint (not guaranteed but can help)
+                if (window.gc) window.gc();
+                console.log(`Cleaned up dynamic image cache, keeping frames ${keepStart} to ${keepEnd}`);
+            }
+            
+            // Function to clean up the loop image cache to save memory
+            function cleanupLoopImageCache(currentIndex) {
+                // If we haven't exceeded the cache limit, no need to clean up
+                let loadedCount = 0;
+                for (let i = 0; i < loopImages.length; i++) {
+                    if (loopImages[i]) loadedCount++;
+                }
+                
+                if (loadedCount <= maxCachedLoopImages) return;
+                
+                // For loop images, we want to keep a continuous sequence
+                // Calculate the range of frames to keep (centered around current frame)
+                const halfRange = Math.floor(maxCachedLoopImages / 2);
+                
+                // Handle wrapping around the loop
+                let keepIndices = [];
+                for (let i = -halfRange; i <= halfRange; i++) {
+                    let index = (currentIndex + i + loopFrames) % loopFrames;
+                    keepIndices.push(index);
+                }
+                
+                // Clear images outside the keep range
+                for (let i = 0; i < loopFrames; i++) {
+                    if (!keepIndices.includes(i) && loopImages[i]) {
+                        // Set src to empty to help garbage collection
+                        loopImages[i].src = '';
+                        loopImages[i] = null;
+                    }
+                }
+                
+                // Force garbage collection hint (not guaranteed but can help)
+                if (window.gc) window.gc();
+                console.log(`Cleaned up loop image cache, keeping ${keepIndices.length} frames around frame ${currentIndex}`);
+            }
+            
             // Load images in batches
             const loadBatch = async (startIndex, count) => {
                 const promises = [];
-                for (let i = 0; i < count; i++) {
+                const batchSize = Math.min(count, 10); // Limit batch size to 10 at a time
+                
+                for (let i = 0; i < batchSize; i++) {
                     if (startIndex + i < totalFrames) {
                         promises.push(loadImage(startIndex + i));
                     }
@@ -1845,9 +1994,11 @@
                 
                 await Promise.all(promises);
                 
-                // Load next batch
-                if (startIndex + count < totalFrames) {
-                    loadBatch(startIndex + count, 20);
+                // Load next batch with a delay to allow for garbage collection
+                if (startIndex + batchSize < totalFrames && startIndex + batchSize < startIndex + count) {
+                    setTimeout(() => {
+                        loadBatch(startIndex + batchSize, count - batchSize);
+                    }, 100); // Add a small delay between batches
                 }
             };
             
@@ -1919,6 +2070,10 @@
                     // Also start preloading dynamic frames
                     preloadInitialDynamicFrames();
                     
+                    // Start the loop animation immediately
+                    loopAnimationActive = true;
+                    playLoopAnimation();
+                    
                     // Add window resize handler
                     window.addEventListener('resize', () => {
                         const newViewportHeight = window.innerHeight;
@@ -1937,10 +2092,10 @@
                 };
                 
                 img.onerror = function() {
-                    console.error("Failed to load first image: Frames/Static/frame_00000.png");
+                    console.error("Failed to load first image: Frames/Static/compressed_Solo_30000.png");
                 };
                 
-                img.src = "Frames/Static/frame_00000.png";
+                img.src = "Frames/Static/compressed_Solo_30000.png";
                 loopImages[0] = img;
             }
             
@@ -1948,24 +2103,27 @@
             function preloadLoopFrames() {
                 console.log("Preloading loop frames from Static folder");
                 
-                for (let i = 1; i < loopFrames; i++) {
+                // Only preload a subset of frames initially to save memory
+                const initialFramesToLoad = Math.min(loopFrames, maxCachedLoopImages);
+                
+                for (let i = 1; i < initialFramesToLoad; i++) {
                     const img = new Image();
                     
                     img.onload = function() {
                         imagesLoaded++;
                         
-                        // Start animation when all frames are loaded
-                        if (imagesLoaded >= loopFrames - 1) {
-                            console.log("All loop frames loaded, starting animation");
-                            playLoopAnimation();
+                        // Start animation when initial frames are loaded
+                        if (imagesLoaded >= initialFramesToLoad - 1) {
+                            console.log(`Initial ${initialFramesToLoad} loop frames loaded`);
+                            // Animation is already started in loadFirstImage
                         }
                     };
                     
                     img.onerror = function() {
-                        console.error(`Failed to load image: Frames/Static/frame_${i.toString().padStart(5, '0')}.png`);
+                        console.error(`Failed to load image: Frames/Static/compressed_Solo_${(30000 + i).toString()}.png`);
                     };
                     
-                    img.src = `Frames/Static/frame_${i.toString().padStart(5, '0')}.png`;
+                    img.src = `Frames/Static/compressed_Solo_${(30000 + i).toString()}.png`;
                     loopImages[i] = img;
                 }
             }
@@ -1982,8 +2140,9 @@
                 // Set active flag
                 loopAnimationActive = true;
                 
-                // Stop the animation if user has started scrolling and not at the top
-                if (isScrolling && window.scrollY > scrollTopThreshold) {
+                // Only stop the animation if user has explicitly started scrolling
+                // and is not at the top of the page
+                if (isScrolling && window.scrollY > scrollTopThreshold && hasScrolledAway) {
                     clearTimeout(loopAnimationId);
                     cancelAnimationFrame(loopAnimationId);
                     loopAnimationActive = false;
@@ -1993,15 +2152,52 @@
                 // Draw the current frame
                 if (loopImages[currentLoopFrame] && loopImages[currentLoopFrame].complete) {
                     drawImageToCanvas(loopImages[currentLoopFrame]);
+                } else {
+                    // If the current frame isn't loaded, load it
+                    loadLoopFrame(currentLoopFrame);
                 }
                 
                 // Increment frame counter and loop back to start if needed
+                const previousFrame = currentLoopFrame;
                 currentLoopFrame = (currentLoopFrame + 1) % loopFrames;
+                
+                // Preload the next few frames if needed
+                preloadNextLoopFrames(currentLoopFrame);
+                
+                // Clean up memory periodically
+                if (currentLoopFrame % 10 === 0) {
+                    cleanupLoopImageCache(currentLoopFrame);
+                }
                 
                 // Schedule the next frame
                 loopAnimationId = setTimeout(() => {
                     requestAnimationFrame(playLoopAnimation);
                 }, 1000 / loopFrameRate);
+            }
+            
+            // Function to load a specific loop frame
+            function loadLoopFrame(index) {
+                if (loopImages[index]) return;
+                
+                const img = new Image();
+                img.onload = function() {
+                    loopImages[index] = img;
+                };
+                img.onerror = function() {
+                    console.error(`Failed to load loop frame: Frames/Static/compressed_Solo_${(30000 + index).toString()}.png`);
+                };
+                img.src = `Frames/Static/compressed_Solo_${(30000 + index).toString()}.png`;
+            }
+            
+            // Function to preload the next few loop frames
+            function preloadNextLoopFrames(currentIndex) {
+                // Preload the next few frames
+                for (let i = 1; i <= 5; i++) {
+                    const nextIndex = (currentIndex + i) % loopFrames;
+                    if (!loopImages[nextIndex]) {
+                        loadLoopFrame(nextIndex);
+                    }
+                }
             }
             
             // Function to stop all animations
@@ -2136,6 +2332,9 @@
                     stopAllAnimations();
                 }
                 
+                // Clear loop images to free up memory
+                clearLoopImages();
+                
                 isScrolling = true;
                 
                 // Update based on current scroll position
@@ -2150,11 +2349,30 @@
                 updateTextSections(scrollRatio);
             }
             
+            // Function to clear loop images to free up memory
+            function clearLoopImages() {
+                console.log("Clearing loop images to free up memory");
+                // Keep only the current frame and a few nearby frames
+                const keepIndices = [];
+                for (let i = -2; i <= 2; i++) {
+                    keepIndices.push((currentLoopFrame + i + loopFrames) % loopFrames);
+                }
+                
+                for (let i = 0; i < loopImages.length; i++) {
+                    if (!keepIndices.includes(i) && loopImages[i]) {
+                        loopImages[i].src = '';
+                        loopImages[i] = null;
+                    }
+                }
+                // Force garbage collection hint
+                if (window.gc) window.gc();
+            }
+            
             // Preload nearby frames
             function preloadNearbyFrames(currentFrame) {
-                // Define the lookahead distances
-                const lookAhead = 16;
-                const lookBehind = 6;
+                // Define the lookahead distances - reduced to save memory
+                const lookAhead = 8;  // Reduced from 16
+                const lookBehind = 3; // Reduced from 6
                 
                 // Determine scroll direction (default forward)
                 const direction = (window.scrollY > lastScrollTop) ? 1 : -1;
@@ -2175,6 +2393,9 @@
                         loadImage(prevFrame);
                     }
                 }
+                
+                // Clean up memory
+                cleanupDynamicImageCache(currentFrame);
             }
             
             // Throttle function to limit how often a function can fire
@@ -2208,6 +2429,18 @@
                 const wasAtTop = isAtTop;
                 isAtTop = window.scrollY <= scrollTopThreshold;
                 
+                // Get the leadership section position
+                const leadershipSection = document.getElementById('leadership');
+                
+                // Update menu bar background based on whether we've reached the leadership section
+                if (leadershipSection && window.scrollY >= leadershipSection.offsetTop - 100) {
+                    // We've reached the leadership section, add the black background
+                    menuBar.classList.add('scrolled');
+                } else {
+                    // We're still in the animation section, keep the menu transparent
+                    menuBar.classList.remove('scrolled');
+                }
+                
                 // Check if user has scrolled away from top
                 if (!hasScrolledAway && window.scrollY > scrollTopThreshold) {
                     hasScrolledAway = true;
@@ -2217,6 +2450,8 @@
                 if (hasScrolledAway && isAtTop) {
                     console.log('User scrolled back to top, restarting loop animation');
                     if (!loopAnimationActive) {
+                        // Clear dynamic images to free up memory before restarting loop
+                        clearDynamicImages();
                         restartLoopAnimation();
                     }
                     return;
@@ -2633,6 +2868,19 @@
                         }
                     }
                 });
+            }
+
+            // Function to clear all dynamic images to free up memory
+            function clearDynamicImages() {
+                console.log("Clearing all dynamic images to free up memory");
+                for (let i = 0; i < images.length; i++) {
+                    if (images[i]) {
+                        images[i].src = '';
+                        images[i] = null;
+                    }
+                }
+                // Force garbage collection hint
+                if (window.gc) window.gc();
             }
         });
     </script>
