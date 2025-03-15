@@ -1314,6 +1314,11 @@
                 padding-right: 0; /* Reset right padding on mobile */
             }
 
+            /* Move the bottom text container up by 25px on mobile */
+            .frame-content > .text-container:last-of-type {
+                transform: translateY(calc(-50% - 25px)); /* Move up by 25px from center */
+            }
+
             .frame-content > .text-container:first-of-type .text-section,
             .frame-content > .text-container:last-of-type .text-section {
                 align-items: center;
@@ -1523,6 +1528,8 @@
     </style>
     <link rel="stylesheet" href="modals.css">
     <link rel="stylesheet" href="news.css">
+    <!-- Add our image queue script -->
+    <script src="image-queue-simple.js"></script>
 </head>
 <body>
     <div class="menu-bar">
@@ -1852,9 +1859,52 @@
             const scrollTopThreshold = 50; // Threshold in pixels to consider as "top" for restarting animation
             const scrollSensitivity = 1.0; // Adjust this value to make scrolling more or less sensitive (higher = less sensitive)
             
+            // Detect Safari or iOS for image format selection
+            // Safari and iOS have limited WebP support, so we serve PNG images instead
+            const isSafariOrIOS = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+                                 /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const imageFormat = isSafariOrIOS ? 'png' : 'webp';
+            const imagePath = isSafariOrIOS ? 'Frames/Dynamic/Frames_PNG' : 'Frames/Dynamic';
+            
+            // Create a single cache-busting value for the entire session
+            // This avoids generating new timestamps for every image request
+            const sessionCacheBuster = `?v=${new Date().getTime()}`;
+            
+            console.log(`Browser detected: ${isSafariOrIOS ? 'Safari/iOS' : 'Other'}, using ${imageFormat} format from path: ${imagePath}`);
+            
+            // Add diagnostic information for Safari/iOS
+            if (isSafariOrIOS) {
+                console.log('Safari/iOS Diagnostics:');
+                console.log('- User Agent:', navigator.userAgent);
+                console.log('- Device Pixel Ratio:', window.devicePixelRatio);
+                console.log('- Screen Size:', window.screen.width, 'x', window.screen.height);
+                console.log('- Viewport Size:', window.innerWidth, 'x', window.innerHeight);
+                console.log('- Private Mode:', typeof window.localStorage === 'object' && window.localStorage === null);
+                
+                // Check for storage limits
+                try {
+                    const testKey = 'safari_test_' + Date.now();
+                    localStorage.setItem(testKey, '1');
+                    localStorage.removeItem(testKey);
+                    console.log('- LocalStorage: Available');
+                } catch (e) {
+                    console.log('- LocalStorage: Error -', e.message);
+                }
+                
+                // Check for WebGL support (can affect canvas performance)
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    console.log('- WebGL Support:', gl ? 'Yes' : 'No');
+                } catch (e) {
+                    console.log('- WebGL Support: Error -', e.message);
+                }
+            }
+            
             // Memory management configuration
-            const maxCachedDynamicImages = 50; // Maximum number of dynamic images to keep in memory
-            const maxCachedLoopImages = 30;    // Maximum number of loop images to keep in memory
+            const maxCachedDynamicImages = isSafariOrIOS ? 30 : 50; // Reduce cache size for Safari/iOS
+            const maxCachedLoopImages = isSafariOrIOS ? 30 : 50; // Cache size for loop animation frames
+            const keyframeInterval = isSafariOrIOS ? 5 : 10; // Keep every Nth frame as keyframes (more frequent for Safari/iOS)
             
             // Animation state
             let loopImages = [];
@@ -1868,10 +1918,12 @@
             let hasScrolledAway = false; // Flag to track if user has scrolled away from top
             let isAtTop = true; // Flag to track if user is at the top
             let loopAnimationActive = false; // Flag to track if loop animation is currently active
-            let hasBeenAtTop = true; // Set to true by default to ensure loop animation starts
-            
-            // Ensure we start at the top of the page
-            window.scrollTo(0, 0);
+            let hasBeenAtTop = false; // Flag to track if user has been at the top and then scrolled away
+            let scrollDirection = 0; // Direction of scrolling: 1 for down, -1 for up, 0 for none
+            let scrollVelocity = 0; // Velocity of scrolling
+            let scrollFrameOffset = 0; // Frame offset for smooth scrolling
+            let scrollAnimationId = null; // ID for scroll animation
+            let isScrollAnimationRunning = false; // Flag to track if scroll animation is running
             
             // Make the main container taller to control scrolling speed 
             mainContainer.style.height = 'calc(100vh * 26.7)'; // This controls scroll sensitivity
@@ -1880,39 +1932,392 @@
             canvas.width = 800;
             canvas.height = 600;
             
-            // Load a specific image
-            const loadImage = (index) => {
-                return new Promise((resolve, reject) => {
-                    if (images[index]) {
-                        resolve(images[index]);
+            // Function to check if a file exists (using HEAD request)
+            function checkFileExists(url) {
+                return new Promise((resolve) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('HEAD', url, true);
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            console.log(`File exists: ${url}`);
+                            resolve(true);
+                        } else {
+                            console.warn(`File does not exist: ${url} (status: ${xhr.status})`);
+                            resolve(false);
+                        }
+                    };
+                    xhr.onerror = function() {
+                        console.warn(`Error checking file: ${url}`);
+                        resolve(false);
+                    };
+                    xhr.send();
+                });
+            }
+            
+            // Initialize canvas size with a default size until first image loads
+            canvas.width = 800;
+            canvas.height = 600;
+            
+            // Image loading queue to limit concurrent requests
+            const imageLoadQueue = {
+                queue: [],
+                inProgress: 0,
+                maxConcurrent: 6, // Most browsers limit to 6-8 connections per domain
+                
+                add: function(index, resolve, reject) {
+                    // Add to queue
+                    this.queue.push({ index, resolve, reject });
+                    this.processNext();
+                },
+                
+                processNext: function() {
+                    // If we're already loading the max number of images or the queue is empty, do nothing
+                    if (this.inProgress >= this.maxConcurrent || this.queue.length === 0) {
                         return;
                     }
                     
-                    const img = new Image();
+                    // Get the next item from the queue
+                    const next = this.queue.shift();
+                    this.inProgress++;
                     
-                    img.onload = () => {
-                        images[index] = img;
+                    // Process the actual image loading
+                    this._loadImage(next.index)
+                        .then(img => {
+                            this.inProgress--;
+                            next.resolve(img);
+                            this.processNext(); // Process next item in queue
+                        })
+                        .catch(err => {
+                            this.inProgress--;
+                            next.reject(err);
+                            this.processNext(); // Process next item in queue
+                        });
+                },
+                
+                // The actual image loading logic (copied from the original loadImage function)
+                _loadImage: function(index) {
+                    return new Promise((resolve, reject) => {
+                        // Check if the frame is too far from the current frame
+                        // This prevents loading frames that were cleared but are far away
+                        const distanceFromCurrent = Math.abs(index - currentFrameIndex);
+                        const maxDistance = 100; // Don't load frames more than 100 frames away
                         
-                        // Set canvas size based on first image
-                        if (index === 0 && canvas.width === 800) {
-                            const scaleFactor = window.innerHeight / img.height;
-                            canvas.width = img.width * scaleFactor;
-                            canvas.height = window.innerHeight;
+                        if (distanceFromCurrent > maxDistance) {
+                            console.log(`Skipping load for frame ${index} - too far from current frame ${currentFrameIndex} (distance: ${distanceFromCurrent})`);
+                            reject(new Error(`Frame ${index} is too far from current frame ${currentFrameIndex}`));
+                            return;
                         }
                         
-                        // Manage memory by clearing old images
-                        cleanupDynamicImageCache(index);
+                        if (images[index]) {
+                            // Image already loaded
+                            resolve(images[index]);
+                        } else {
+                            // If image isn't loaded yet, load it
+                            const img = new Image();
+                            
+                            img.onload = () => {
+                                images[index] = img;
+                                imagesLoaded++;
+                                resolve(img);
+                            };
+                            
+                            img.onerror = () => {
+                                console.error(`Failed to load image: ${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}`);
+                                
+                                // Try again with a small delay - sometimes this helps with temporary network issues
+                                setTimeout(() => {
+                                    const retryImg = new Image();
+                                    
+                                    retryImg.onload = () => {
+                                        console.log(`Successfully loaded image on retry: frame ${index}`);
+                                        images[index] = retryImg;
+                                        imagesLoaded++;
+                                        resolve(retryImg);
+                                    };
+                                    
+                                    retryImg.onerror = async () => {
+                                        // If WebP fails, try PNG as fallback
+                                        if (imageFormat === 'webp') {
+                                            console.log(`Trying PNG fallback for frame ${index}`);
+                                            
+                                            // Check if PNG file exists before trying to load it
+                                            const pngPath = `Frames/Dynamic/Frames_PNG/frame_${String(index).padStart(5, '0')}.png`;
+                                            console.log(`Checking if PNG exists: ${pngPath}`);
+                                            
+                                            const pngExists = await checkFileExists(pngPath);
+                                            
+                                            if (pngExists) {
+                                                const pngImg = new Image();
+                                                
+                                                pngImg.onload = () => {
+                                                    console.log(`Successfully loaded PNG fallback for frame ${index}`);
+                                                    images[index] = pngImg;
+                                                    imagesLoaded++;
+                                                    resolve(pngImg);
+                                                };
+                                                
+                                                pngImg.onerror = () => {
+                                                    console.error(`Failed to load PNG fallback for frame ${index} even though file exists`);
+                                                    
+                                                    // Try to find the nearest available frame
+                                                    console.log(`Trying to find nearest available frame to ${index}`);
+                                                    
+                                                    // Look for the nearest loaded frame
+                                                    let nearestFrame = null;
+                                                    let minDistance = Number.MAX_VALUE;
+                                                    
+                                                    for (let i = 0; i < images.length; i++) {
+                                                        if (images[i] && images[i].complete) {
+                                                            const distance = Math.abs(i - index);
+                                                            if (distance < minDistance) {
+                                                                minDistance = distance;
+                                                                nearestFrame = i;
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    if (nearestFrame !== null) {
+                                                        console.log(`Using frame ${nearestFrame} as fallback for frame ${index}`);
+                                                        // Use the nearest frame as a fallback
+                                                        images[index] = images[nearestFrame];
+                                                        resolve(images[nearestFrame]);
+                                                    } else {
+                                                        reject(new Error(`Failed to load image: Both WebP and PNG formats failed for frame ${index}`));
+                                                    }
+                                                };
+                                                
+                                                // Use a more robust path construction for PNG fallback
+                                                // Log the full path for debugging
+                                                console.log(`Attempting to load PNG from: ${pngPath}`);
+                                                
+                                                // Add cache-busting for PNG fallback too, but use a simpler approach for Safari
+                                                const pngCacheBuster = isSafariOrIOS ? '' : `?v=${new Date().getTime()}_png`;
+                                                pngImg.src = pngPath + pngCacheBuster;
+                                            } else {
+                                                console.error(`PNG file does not exist: ${pngPath}`);
+                                                
+                                                // Try to find the nearest available frame as a last resort
+                                                let nearestFrame = null;
+                                                let minDistance = Number.MAX_VALUE;
+                                                
+                                                for (let i = 0; i < images.length; i++) {
+                                                    if (images[i] && images[i].complete) {
+                                                        const distance = Math.abs(i - index);
+                                                        if (distance < minDistance) {
+                                                            minDistance = distance;
+                                                            nearestFrame = i;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if (nearestFrame !== null) {
+                                                    console.log(`Using frame ${nearestFrame} as fallback for frame ${index}`);
+                                                    // Use the nearest frame as a fallback
+                                                    images[index] = images[nearestFrame];
+                                                    resolve(images[nearestFrame]);
+                                                } else {
+                                                    reject(new Error(`Failed to load image: Both WebP and PNG formats failed for frame ${index}`));
+                                                }
+                                            }
+                                        } else {
+                                            // Try to find the nearest available frame as a last resort
+                                            let nearestFrame = null;
+                                            let minDistance = Number.MAX_VALUE;
+                                            
+                                            for (let i = 0; i < images.length; i++) {
+                                                if (images[i] && images[i].complete) {
+                                                    const distance = Math.abs(i - index);
+                                                    if (distance < minDistance) {
+                                                        minDistance = distance;
+                                                        nearestFrame = i;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if (nearestFrame !== null) {
+                                                console.log(`Using frame ${nearestFrame} as fallback for frame ${index}`);
+                                                // Use the nearest frame as a fallback
+                                                images[index] = images[nearestFrame];
+                                                resolve(images[nearestFrame]);
+                                            } else {
+                                                reject(new Error(`Failed to load image: ${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}`));
+                                            }
+                                        }
+                                    };
+                                    
+                                    // Add cache-busting for retry to avoid cached error responses
+                                    const retryTimestamp = new Date().getTime();
+                                    retryImg.src = `${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}?retry=${retryTimestamp}`;
+                                }, 500); // Wait 500ms before retry
+                            };
+                            
+                            // Add cache-busting for Safari/iOS to prevent stale cache issues
+                            const cacheBuster = isSafariOrIOS ? `?v=${new Date().getTime()}` : '';
+                            img.src = `${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}${cacheBuster}`;
+                        }
+                    });
+                }
+            };
+            
+
+            // Load a specific image
+            const loadImage = (index) => {
+                return new Promise((resolve, reject) => {
+                    // Check if the frame is too far from the current frame
+                    // This prevents loading frames that were cleared but are far away
+                    const distanceFromCurrent = Math.abs(index - currentFrameIndex);
+                    const maxDistance = 100; // Don't load frames more than 100 frames away
+                    
+                    if (distanceFromCurrent > maxDistance) {
+                        console.log(`Skipping load for frame ${index} - too far from current frame ${currentFrameIndex} (distance: ${distanceFromCurrent})`);
+                        reject(new Error(`Frame ${index} is too far from current frame ${currentFrameIndex}`));
+                        return;
+                    }
+                    
+                    if (images[index]) {
+                        // Image already loaded
+                        resolve(images[index]);
+                    } else {
+                        // If image isn't loaded yet, load it
+                        const img = new Image();
                         
-                        resolve(img);
-                    };
-                    
-                    img.onerror = () => {
-                        console.error(`Failed to load image: Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`);
-                        reject(new Error(`Failed to load image: Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`));
-                    };
-                    
-                    img.src = `Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`;
+                        img.onload = () => {
+                            images[index] = img;
+                            imagesLoaded++;
+                            resolve(img);
+                        };
+                        
+                        img.onerror = () => {
+                            const imgPath = `${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}`;
+                            console.error(`Failed to load image: ${imgPath}`);
+                            
+                            // Try again with a small delay - sometimes this helps with temporary network issues
+                            setTimeout(() => {
+                                const retryImg = new Image();
+                                
+                                retryImg.onload = () => {
+                                    console.log(`Successfully loaded image on retry: frame ${index}`);
+                                    images[index] = retryImg;
+                                    imagesLoaded++;
+                                    resolve(retryImg);
+                                };
+                                
+                                retryImg.onerror = async () => {
+                                    // If WebP fails, try PNG as fallback
+                                    if (imageFormat === 'webp') {
+                                        console.log(`Trying PNG fallback for frame ${index}`);
+                                        
+                                        // Use a direct path to PNG without additional checks
+                                        const pngPath = `Frames/Dynamic/Frames_PNG/frame_${String(index).padStart(5, '0')}.png`;
+                                        console.log(`Loading PNG directly: ${pngPath}`);
+                                        
+                                        const pngImg = new Image();
+                                        
+                                        pngImg.onload = () => {
+                                            console.log(`Successfully loaded PNG fallback for frame ${index}`);
+                                            images[index] = pngImg;
+                                            imagesLoaded++;
+                                            resolve(pngImg);
+                                        };
+                                        
+                                        pngImg.onerror = () => {
+                                            console.error(`Failed to load PNG fallback for frame ${index}`);
+                                            
+                                            // Try to find the nearest available frame as a last resort
+                                            let nearestFrame = null;
+                                            let minDistance = Number.MAX_VALUE;
+                                            
+                                            for (let i = 0; i < images.length; i++) {
+                                                if (images[i] && images[i].complete) {
+                                                    const distance = Math.abs(i - index);
+                                                    if (distance < minDistance) {
+                                                        minDistance = distance;
+                                                        nearestFrame = i;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if (nearestFrame !== null) {
+                                                console.log(`Using frame ${nearestFrame} as fallback for frame ${index}`);
+                                                // Use the nearest frame as a fallback
+                                                images[index] = images[nearestFrame];
+                                                resolve(images[nearestFrame]);
+                                            } else {
+                                                reject(new Error(`Failed to load image: Both WebP and PNG formats failed for frame ${index}`));
+                                            }
+                                        };
+                                        
+                                        // Use the session cache buster for consistency
+                                        pngImg.src = pngPath + sessionCacheBuster;
+                                    } else {
+                                        // Try to find the nearest available frame as a last resort
+                                        let nearestFrame = null;
+                                        let minDistance = Number.MAX_VALUE;
+                                        
+                                        for (let i = 0; i < images.length; i++) {
+                                            if (images[i] && images[i].complete) {
+                                                const distance = Math.abs(i - index);
+                                                if (distance < minDistance) {
+                                                    minDistance = distance;
+                                                    nearestFrame = i;
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (nearestFrame !== null) {
+                                            console.log(`Using frame ${nearestFrame} as fallback for frame ${index}`);
+                                            // Use the nearest frame as a fallback
+                                            images[index] = images[nearestFrame];
+                                            resolve(images[nearestFrame]);
+                                        } else {
+                                            reject(new Error(`Failed to load image: ${imgPath}`));
+                                        }
+                                    }
+                                };
+                                
+                                // Use the session cache buster for consistency
+                                retryImg.src = `${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}${sessionCacheBuster}`;
+                            }, 100); // Reduced delay to 100ms for better responsiveness
+                        };
+                        
+                        // Use the session cache buster for all browsers
+                        img.src = `${imagePath}/frame_${String(index).padStart(5, '0')}.${imageFormat}${sessionCacheBuster}`;
+                    }
                 });
+            };
+            
+            // Load a batch of images with controlled concurrency for Safari/iOS
+            const loadBatchOfImages = (startIndex, count) => {
+                // Use smaller batch size and add delay between batches for Safari/iOS
+                const batchSize = isSafariOrIOS ? 5 : 10;
+                const delay = isSafariOrIOS ? 100 : 0;
+                
+                const promises = [];
+                
+                for (let i = 0; i < count; i += batchSize) {
+                    const batchPromises = [];
+                    const currentBatchSize = Math.min(batchSize, count - i);
+                    
+                    for (let j = 0; j < currentBatchSize; j++) {
+                        if (startIndex + i + j < totalFrames) {
+                            batchPromises.push(loadImage(startIndex + i + j));
+                        }
+                    }
+                    
+                    // Add sequential loading with delays for Safari/iOS
+                    if (isSafariOrIOS && delay > 0) {
+                        const delayedPromise = new Promise(resolve => {
+                            setTimeout(() => {
+                                Promise.all(batchPromises).then(resolve);
+                            }, delay * (i / batchSize));
+                        });
+                        promises.push(delayedPromise);
+                    } else {
+                        promises.push(Promise.all(batchPromises));
+                    }
+                }
+                
+                return Promise.all(promises);
             };
             
             // Function to clean up the dynamic image cache to save memory
@@ -1923,27 +2328,111 @@
                     if (images[i]) loadedCount++;
                 }
                 
-                if (loadedCount <= maxCachedDynamicImages) return;
+                // For Safari/iOS, we need to be more careful about memory usage
+                // but we also need to ensure we don't clear frames that are about to be used
+                const cleanupThreshold = isSafariOrIOS ? Math.floor(maxCachedDynamicImages * 0.9) : maxCachedDynamicImages;
+                
+                // Only clean up if we've exceeded the threshold by a significant margin
+                // This prevents frequent cleanup operations that could affect performance
+                if (loadedCount <= cleanupThreshold * 1.2) {
+                    // Skip cleanup if we haven't exceeded the threshold by much
+                    return;
+                }
+                
+                console.log(`Starting cleanup: ${loadedCount} frames loaded, threshold is ${cleanupThreshold}`);
                 
                 // Calculate the range of frames to keep (centered around current frame)
-                const halfRange = Math.floor(maxCachedDynamicImages / 2);
-                const keepStart = Math.max(0, currentIndex - halfRange);
-                const keepEnd = Math.min(totalFrames - 1, currentIndex + halfRange);
+                const baseRange = isSafariOrIOS ? 60 : 100; // Base range of frames to keep
                 
-                // Clear images outside the keep range
-                for (let i = 0; i < totalFrames; i++) {
-                    if (i < keepStart || i > keepEnd) {
-                        if (images[i]) {
-                            // Set src to empty to help garbage collection
-                            images[i].src = '';
-                            images[i] = null;
+                // Adjust the range based on scroll direction and velocity
+                const scrollMultiplier = Math.min(3, Math.max(1, Math.abs(scrollVelocity || 1)));
+                const directionFactor = scrollDirection || 1;
+                
+                // Keep more frames in the direction of scrolling
+                const extraFramesAhead = directionFactor > 0 ? 
+                    baseRange * scrollMultiplier : // More ahead if scrolling down
+                    baseRange / 2; // Fewer if scrolling up
+                    
+                const extraFramesBehind = directionFactor > 0 ? 
+                    baseRange / 2 : // Fewer behind if scrolling down
+                    baseRange * scrollMultiplier; // More if scrolling up
+                
+                // Adjust the range based on scroll direction
+                const keepStart = Math.max(0, currentIndex - extraFramesBehind);
+                const keepEnd = Math.min(totalFrames - 1, currentIndex + extraFramesAhead);
+                
+                // Create a set of frames to protect from cleanup
+                const protectedFrames = new Set();
+                
+                // Add the current range to protected frames
+                for (let i = keepStart; i <= keepEnd; i++) {
+                    protectedFrames.add(i);
+                }
+                
+                // Add keyframes to protected frames
+                for (let i = 0; i < totalFrames; i += keyframeInterval) {
+                    protectedFrames.add(i);
+                }
+                
+                // Add additional keyframes (every 5th frame)
+                for (let i = 0; i < totalFrames; i += 5) {
+                    protectedFrames.add(i);
+                }
+                
+                // Add frames that are very close to the current frame
+                const veryCloseRange = 20;
+                for (let i = currentIndex - veryCloseRange; i <= currentIndex + veryCloseRange; i++) {
+                    if (i >= 0 && i < totalFrames) {
+                        protectedFrames.add(i);
+                    }
+                }
+                
+                // Add frames that are likely to be needed soon based on scroll direction
+                const futureRange = 50 * Math.abs(scrollVelocity || 1);
+                if (directionFactor > 0) {
+                    // If scrolling down, protect frames ahead
+                    for (let i = currentIndex; i <= currentIndex + futureRange; i++) {
+                        if (i < totalFrames) {
+                            protectedFrames.add(i);
+                        }
+                    }
+                } else {
+                    // If scrolling up, protect frames behind
+                    for (let i = currentIndex; i >= currentIndex - futureRange; i--) {
+                        if (i >= 0) {
+                            protectedFrames.add(i);
                         }
                     }
                 }
                 
-                // Force garbage collection hint (not guaranteed but can help)
+                // Clear frames that aren't protected
+                let clearedCount = 0;
+                for (let i = 0; i < totalFrames; i++) {
+                    // Skip frames that are protected
+                    if (protectedFrames.has(i)) {
+                        continue;
+                    }
+                    
+                    // Only clear loaded frames
+                    if (images[i]) {
+                        // Set src to empty to help garbage collection
+                        images[i].src = '';
+                        images[i] = null;
+                        clearedCount++;
+                        
+                        // Stop clearing if we've cleared enough frames
+                        if (loadedCount - clearedCount <= cleanupThreshold) {
+                            break;
+                        }
+                    }
+                }
+                
+                if (clearedCount > 0) {
+                    console.log(`Cleared ${clearedCount} frames, now have ${loadedCount - clearedCount} frames in cache`);
+                }
+                
+                // Force garbage collection hint
                 if (window.gc) window.gc();
-                console.log(`Cleaned up dynamic image cache, keeping frames ${keepStart} to ${keepEnd}`);
             }
             
             // Function to clean up the loop image cache to save memory
@@ -1983,22 +2472,41 @@
             
             // Load images in batches
             const loadBatch = async (startIndex, count) => {
-                const promises = [];
-                const batchSize = Math.min(count, 10); // Limit batch size to 10 at a time
-                
-                for (let i = 0; i < batchSize; i++) {
-                    if (startIndex + i < totalFrames) {
-                        promises.push(loadImage(startIndex + i));
+                // Use our optimized batch loading function
+                if (isSafariOrIOS) {
+                    console.log(`Safari/iOS optimized loading: ${count} frames starting at ${startIndex}`);
+                    
+                    // For Safari/iOS, load in smaller chunks with more controlled concurrency
+                    const initialChunkSize = 10; // Start with a smaller initial chunk
+                    
+                    // Load the first chunk immediately for quick display
+                    await loadBatchOfImages(startIndex, initialChunkSize);
+                    
+                    // Then load the rest in the background
+                    if (count > initialChunkSize) {
+                        setTimeout(() => {
+                            loadBatchOfImages(startIndex + initialChunkSize, count - initialChunkSize);
+                        }, 300); // Longer delay to ensure the first chunk is processed
                     }
-                }
-                
-                await Promise.all(promises);
-                
-                // Load next batch with a delay to allow for garbage collection
-                if (startIndex + batchSize < totalFrames && startIndex + batchSize < startIndex + count) {
-                    setTimeout(() => {
-                        loadBatch(startIndex + batchSize, count - batchSize);
-                    }, 100); // Add a small delay between batches
+                } else {
+                    // Original implementation for other browsers
+                    const promises = [];
+                    const batchSize = Math.min(count, 10); // Limit batch size to 10 at a time
+                    
+                    for (let i = 0; i < batchSize; i++) {
+                        if (startIndex + i < totalFrames) {
+                            promises.push(loadImage(startIndex + i));
+                        }
+                    }
+                    
+                    await Promise.all(promises);
+                    
+                    // Load next batch with a delay to allow for garbage collection
+                    if (startIndex + batchSize < totalFrames && startIndex + batchSize < startIndex + count) {
+                        setTimeout(() => {
+                            loadBatch(startIndex + batchSize, count - batchSize);
+                        }, 100); // Add a small delay between batches
+                    }
                 }
             };
             
@@ -2092,10 +2600,10 @@
                 };
                 
                 img.onerror = function() {
-                    console.error("Failed to load first image: Frames/Static/compressed_Solo_30000.png");
+                    console.error("Failed to load first image: Frames/Static/frame_00000.png");
                 };
                 
-                img.src = "Frames/Static/compressed_Solo_30000.png";
+                img.src = "Frames/Static/frame_00000.png";
                 loopImages[0] = img;
             }
             
@@ -2120,10 +2628,10 @@
                     };
                     
                     img.onerror = function() {
-                        console.error(`Failed to load image: Frames/Static/compressed_Solo_${(30000 + i).toString()}.png`);
+                        console.error(`Failed to load image: Frames/Static/frame_${String(i).padStart(5, '0')}.png`);
                     };
                     
-                    img.src = `Frames/Static/compressed_Solo_${(30000 + i).toString()}.png`;
+                    img.src = `Frames/Static/frame_${String(i).padStart(5, '0')}.png`;
                     loopImages[i] = img;
                 }
             }
@@ -2184,9 +2692,9 @@
                     loopImages[index] = img;
                 };
                 img.onerror = function() {
-                    console.error(`Failed to load loop frame: Frames/Static/compressed_Solo_${(30000 + index).toString()}.png`);
+                    console.error(`Failed to load loop frame: Frames/Static/frame_${String(index).padStart(5, '0')}.png`);
                 };
-                img.src = `Frames/Static/compressed_Solo_${(30000 + index).toString()}.png`;
+                img.src = `Frames/Static/frame_${String(index).padStart(5, '0')}.png`;
             }
             
             // Function to preload the next few loop frames
@@ -2370,32 +2878,107 @@
             
             // Preload nearby frames
             function preloadNearbyFrames(currentFrame) {
-                // Define the lookahead distances - reduced to save memory
-                const lookAhead = 8;  // Reduced from 16
-                const lookBehind = 3; // Reduced from 6
+                // Only preload frames that are likely to be needed soon
+                // This prevents loading frames that are far away from the current position
                 
-                // Determine scroll direction (default forward)
-                const direction = (window.scrollY > lastScrollTop) ? 1 : -1;
-                lastScrollTop = window.scrollY;
+                // Get the current scroll direction (default to forward if not set)
+                const currentDirection = scrollDirection || 1;
                 
-                // Prioritize preloading frames in scroll direction
-                for (let i = 1; i <= lookAhead; i++) {
-                    const nextFrame = currentFrame + (i * direction);
-                    if (nextFrame >= 0 && nextFrame < totalFrames) {
-                        loadImage(nextFrame);
+                // Use different lookahead distances based on direction and device
+                // Increase lookahead for better responsiveness
+                const lookAhead = currentDirection > 0 ? 30 : 12; // More frames ahead if scrolling down
+                const lookBehind = currentDirection > 0 ? 8 : 20; // More frames behind if scrolling up
+                
+                // Create a priority queue of frames to preload
+                const framesToPreload = [];
+                
+                // Helper function to add frames to the preload queue with priority
+                const addFramesToQueue = (startFrame, count, direction, priority) => {
+                    for (let i = 1; i <= count; i++) {
+                        const frame = startFrame + (i * direction);
+                        if (frame >= 0 && frame < totalFrames && !images[frame]) {
+                            framesToPreload.push({
+                                index: frame,
+                                priority: priority,
+                                distance: i
+                            });
+                        }
                     }
+                };
+                
+                // Add frames in the current scroll direction (highest priority)
+                addFramesToQueue(currentFrame, lookAhead, currentDirection, 1);
+                
+                // Add frames in the opposite direction (medium priority)
+                addFramesToQueue(currentFrame, lookBehind, -currentDirection, 2);
+                
+                // Add keyframes if they exist (also high priority)
+                if (keyframes && keyframes.length > 0) {
+                    keyframes.forEach(keyframe => {
+                        if (!images[keyframe] && Math.abs(keyframe - currentFrame) < 100) {
+                            framesToPreload.push({
+                                index: keyframe,
+                                priority: 1,
+                                distance: Math.abs(keyframe - currentFrame)
+                            });
+                        }
+                    });
                 }
                 
-                // Also preload a few frames in the opposite direction
-                for (let i = 1; i <= lookBehind; i++) {
-                    const prevFrame = currentFrame - (i * direction);
-                    if (prevFrame >= 0 && prevFrame < totalFrames) {
-                        loadImage(prevFrame);
+                // Sort by priority first, then by distance
+                framesToPreload.sort((a, b) => {
+                    if (a.priority !== b.priority) {
+                        return a.priority - b.priority;
+                    }
+                    return a.distance - b.distance;
+                });
+                
+                // Use requestAnimationFrame for more responsive preloading
+                // This is more responsive than requestIdleCallback for critical frames
+                if (framesToPreload.length > 0) {
+                    // Immediately load the first few highest priority frames
+                    const immediateFrames = framesToPreload.slice(0, 5);
+                    immediateFrames.forEach(frame => {
+                        loadImage(frame.index).catch(err => {
+                            console.warn(`Immediate preload warning for frame ${frame.index}: ${err.message}`);
+                        });
+                    });
+                    
+                    // Use requestIdleCallback for the rest
+                    if (window.requestIdleCallback && framesToPreload.length > 5) {
+                        window.requestIdleCallback(() => {
+                            console.log(`Preloading ${framesToPreload.length - 5} additional frames near ${currentFrame}, direction: ${currentDirection > 0 ? 'down' : 'up'}`);
+                            
+                            // Preload remaining frames during idle time
+                            const remainingFrames = framesToPreload.slice(5);
+                            let preloadedCount = 0;
+                            
+                            // Process in smaller batches to avoid blocking
+                            const processBatch = (startIndex) => {
+                                const endIndex = Math.min(startIndex + 5, remainingFrames.length);
+                                const batch = remainingFrames.slice(startIndex, endIndex);
+                                
+                                batch.forEach(frame => {
+                                    loadImage(frame.index).catch(err => {
+                                        console.warn(`Batch preload warning for frame ${frame.index}: ${err.message}`);
+                                    });
+                                });
+                                
+                                preloadedCount += batch.length;
+                                
+                                // If there are more frames to process, schedule the next batch
+                                if (endIndex < remainingFrames.length) {
+                                    setTimeout(() => processBatch(endIndex), 0);
+                                } else {
+                                    console.log(`Completed preloading ${preloadedCount} additional frames`);
+                                }
+                            };
+                            
+                            // Start processing the first batch
+                            processBatch(0);
+                        }, { timeout: 1000 });
                     }
                 }
-                
-                // Clean up memory
-                cleanupDynamicImageCache(currentFrame);
             }
             
             // Throttle function to limit how often a function can fire
@@ -2424,6 +3007,17 @@
             const simpleScrollHandler = throttle(function() {
                 const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
                 const scrollRatio = window.scrollY / scrollHeight;
+                
+                // Determine scroll direction
+                const currentScrollTop = window.scrollY;
+                if (currentScrollTop > lastScrollTop) {
+                    scrollDirection = 1; // Scrolling down
+                } else if (currentScrollTop < lastScrollTop) {
+                    scrollDirection = -1; // Scrolling up
+                }
+                
+                // Calculate scroll velocity (simple version)
+                scrollVelocity = Math.abs(currentScrollTop - lastScrollTop);
                 
                 // Check if user is at the top
                 const wasAtTop = isAtTop;
@@ -2457,35 +3051,32 @@
                     return;
                 }
                 
-                // Check if user was at top and now scrolling down again
-                if ((wasAtTop && !isAtTop) || (hasBeenAtTop && !isAtTop && !isScrolling)) {
-                    console.log('User was at top and now scrolling down, starting scroll animation');
-                    hasBeenAtTop = false; // Reset this flag
-                    startScrollAnimation();
-                }
-                
-                // Only update frame based on scroll if user has started scrolling
-                if (isScrolling && !isAtTop) {
-                    // Calculate frame number based on scroll position
-                    const frameNumber = Math.min(
-                        totalFrames - 1, 
-                        Math.floor(scrollRatio * totalFrames)
-                    );
-                    
-                    // Only update if the frame has changed
-                    if (frameNumber !== currentFrameIndex) {
-                        // Draw the frame
-                        drawFrame(frameNumber);
-                        
-                        // Preload nearby frames
-                        if (frameNumber % 5 === 0) { // Only preload every 5 frames for performance
-                            setTimeout(() => preloadNearbyFrames(frameNumber), 10);
-                        }
+                // If we're not at the top, handle the scroll animation
+                if (!isAtTop) {
+                    // Stop the loop animation if it's running
+                    if (loopAnimationActive) {
+                        stopAllAnimations();
+                        loopAnimationActive = false;
                     }
+                    
+                    // Set the scrolling flag
+                    isScrolling = true;
+                    
+                    // Calculate the frame number based on scroll position
+                    const frameNumber = Math.floor(scrollRatio * totalFrames);
+                    
+                    // Load and draw the frame
+                    loadAndDrawScrollFrame(frameNumber);
                     
                     // Update text sections
                     updateTextSections(scrollRatio);
+                    
+                    // Use our new intelligent preloading strategy
+                    intelligentPreload();
                 }
+                
+                // Store the current scroll position
+                lastScrollTop = currentScrollTop;
             }, 12); // ~83fps
             
             // Handle scroll events - simple and responsive
@@ -2540,6 +3131,17 @@
                 const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
                 const scrollRatio = window.scrollY / scrollHeight;
                 
+                // Determine scroll direction
+                const currentScrollTop = window.scrollY;
+                if (currentScrollTop > lastScrollTop) {
+                    scrollDirection = 1; // Scrolling down
+                } else if (currentScrollTop < lastScrollTop) {
+                    scrollDirection = -1; // Scrolling up
+                }
+                
+                // Calculate scroll velocity (simple version)
+                scrollVelocity = Math.abs(currentScrollTop - lastScrollTop);
+                
                 // Check if user is at the top
                 const wasAtTop = isAtTop;
                 isAtTop = window.scrollY <= scrollTopThreshold;
@@ -2567,7 +3169,9 @@
                 
                 // Only update frame based on scroll if user has started scrolling
                 if (isScrolling && !isAtTop) {
-                    const frameNumber = calculateScrollFrame();
+                    const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                    const scrollRatio = window.scrollY / scrollHeight;
+                    const frameNumber = Math.floor(scrollRatio * totalFrames);
                     loadAndDrawScrollFrame(frameNumber);
                     updateTextSections(scrollRatio);
                 }
@@ -2610,9 +3214,25 @@
             
             // Listen for scroll events
             window.addEventListener('scroll', function() {
-                // Use our new handleScroll instead of the original implementation
-                newHandleScroll();
+                // Update scroll direction and velocity
+                const currentScrollTop = window.scrollY;
+                if (currentScrollTop > lastScrollTop) {
+                    scrollDirection = 1; // Scrolling down
+                } else if (currentScrollTop < lastScrollTop) {
+                    scrollDirection = -1; // Scrolling up
+                }
+                
+                // Calculate scroll velocity
+                scrollVelocity = Math.abs(currentScrollTop - lastScrollTop);
+                
+                // Use our intelligent preloading strategy
+                intelligentPreload();
+                
+                // Handle scroll end detection
                 handleScrollEnd();
+                
+                // Update last scroll position
+                lastScrollTop = currentScrollTop;
             }, { passive: true }); // Passive listener for better performance
             
             // Function to find the next section or list item to scroll to
@@ -2727,36 +3347,50 @@
             
             // Preload nearby frames when idle - improved version
             function preloadNearbyFrames(currentFrame) {
-                // Define the lookahead direction based on scroll direction
-                // Default to forward (1) if no consistent direction is detected
-                // This ensures we don't flip-flop on tiny scroll changes
-                const direction = (scrollDirection !== 0) ? scrollDirection : 1; 
+                // Only preload frames that are likely to be needed soon
+                // This prevents loading frames that are far away from the current position
+                
+                // Get the current scroll direction (default to forward if not set)
+                const currentDirection = scrollDirection || 1;
                 
                 // Use different lookahead distances based on direction
-                // but maintain some consistency even if direction changes temporarily
-                const lookAhead = Math.abs(scrollDirection) > 0 ? 16 : 10; // Double the lookahead frames (was 8)
-                const lookBehind = 6; // Double the lookbehind frames (was 3)
+                const lookAhead = currentDirection > 0 ? 20 : 8; // More frames ahead if scrolling down
+                const lookBehind = currentDirection > 0 ? 5 : 15; // More frames behind if scrolling up
+                
+                // Track which frames we're trying to preload for debugging
+                const framesToPreload = [];
                 
                 if (window.requestIdleCallback) {
                     window.requestIdleCallback(() => {
+                        console.log(`Preloading frames near ${currentFrame}, direction: ${currentDirection > 0 ? 'down' : 'up'}`);
+                        
                         // Prioritize preloading frames in scroll direction
                         for (let i = 1; i <= lookAhead; i++) {
-                            const nextFrame = currentFrame + (i * direction);
+                            const nextFrame = currentFrame + (i * currentDirection);
                             if (nextFrame >= 0 && nextFrame < totalFrames && !images[nextFrame]) {
-                                const img = new Image();
-                                img.src = `Frames/Dynamic/frame_${String(nextFrame).padStart(5, '0')}.webp`;
-                                images[nextFrame] = img;
+                                framesToPreload.push(nextFrame);
+                                // Use the loadImage function instead of creating a new Image directly
+                                // This ensures we use all the fallback mechanisms
+                                loadImage(nextFrame).catch(err => {
+                                    console.warn(`Preload warning for frame ${nextFrame}: ${err.message}`);
+                                });
                             }
                         }
                         
                         // Also preload a few frames in the opposite direction
                         for (let i = 1; i <= lookBehind; i++) {
-                            const prevFrame = currentFrame - (i * direction);
+                            const prevFrame = currentFrame - (i * currentDirection);
                             if (prevFrame >= 0 && prevFrame < totalFrames && !images[prevFrame]) {
-                                const img = new Image();
-                                img.src = `Frames/Dynamic/frame_${String(prevFrame).padStart(5, '0')}.webp`;
-                                images[prevFrame] = img;
+                                framesToPreload.push(prevFrame);
+                                // Use the loadImage function instead of creating a new Image directly
+                                loadImage(prevFrame).catch(err => {
+                                    console.warn(`Preload warning for frame ${prevFrame}: ${err.message}`);
+                                });
                             }
+                        }
+                        
+                        if (framesToPreload.length > 0) {
+                            console.log(`Attempting to preload frames: ${framesToPreload.join(', ')}`);
                         }
                     });
                 }
@@ -2882,12 +3516,190 @@
                 // Force garbage collection hint
                 if (window.gc) window.gc();
             }
+
+            // Function to load and draw a specific frame based on scroll position
+            function loadAndDrawScrollFrame(frameNumber, forceImmediate = false) {
+                // Ensure frame number is within valid range
+                frameNumber = Math.max(0, Math.min(frameNumber, totalFrames - 1));
+                
+                // Update current frame index
+                currentFrameIndex = frameNumber;
+                
+                // If the image is already loaded, draw it immediately
+                if (images[frameNumber] && images[frameNumber].complete) {
+                    // Clear canvas
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw the image centered and scaled to fill height
+                    const scaleFactor = canvas.height / images[frameNumber].height;
+                    const scaledWidth = images[frameNumber].width * scaleFactor;
+                    const xOffset = (canvas.width - scaledWidth) / 2;
+                    
+                    context.drawImage(
+                        images[frameNumber],
+                        xOffset, 0,
+                        scaledWidth, canvas.height
+                    );
+                    
+                    // Clean up memory periodically
+                    if (frameNumber % 10 === 0 && !forceImmediate) {
+                        cleanupDynamicImageCache(frameNumber);
+                    }
+                    
+                    // Preload nearby frames for smoother scrolling
+                    if (!forceImmediate) {
+                        preloadNearbyFrames(frameNumber);
+                    }
+                } else {
+                    // If the image isn't loaded yet, load it and then draw
+                    loadImage(frameNumber).then(() => {
+                        // Draw the frame once loaded
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw the image centered and scaled to fill height
+                        const scaleFactor = canvas.height / images[frameNumber].height;
+                        const scaledWidth = images[frameNumber].width * scaleFactor;
+                        const xOffset = (canvas.width - scaledWidth) / 2;
+                        
+                        context.drawImage(
+                            images[frameNumber],
+                            xOffset, 0,
+                            scaledWidth, canvas.height
+                        );
+                        
+                        // Clean up memory periodically
+                        if (frameNumber % 10 === 0 && !forceImmediate) {
+                            cleanupDynamicImageCache(frameNumber);
+                        }
+                        
+                        // Preload nearby frames for smoother scrolling
+                        if (!forceImmediate) {
+                            preloadNearbyFrames(frameNumber);
+                        }
+                    }).catch(error => {
+                        console.error(`Failed to load frame ${frameNumber}:`, error);
+                    });
+                }
+            }
+
+            // Intelligent preloading strategy
+            function intelligentPreload() {
+                // Don't preload if we're not scrolling
+                if (!isScrolling) return;
+                
+                // Get the current frame index
+                const currentFrame = currentFrameIndex;
+                
+                // Determine the preload strategy based on scroll direction and velocity
+                const direction = scrollDirection || 1;
+                const velocity = Math.abs(scrollVelocity);
+                
+                // Calculate how many frames to preload based on velocity
+                // Higher velocity = more frames to preload
+                const basePreloadCount = 20;
+                const velocityFactor = Math.min(3, Math.max(1, Math.floor(velocity / 10)));
+                const preloadCount = basePreloadCount * velocityFactor;
+                
+                console.log(`Intelligent preload: current=${currentFrame}, direction=${direction}, velocity=${velocity}, preloadCount=${preloadCount}`);
+                
+                // Create a priority list of frames to preload
+                const framesToPreload = [];
+                
+                // First priority: Frames immediately ahead in the scroll direction
+                for (let i = 1; i <= preloadCount; i++) {
+                    const frame = currentFrame + (i * direction);
+                    if (frame >= 0 && frame < totalFrames) {
+                        framesToPreload.push({
+                            index: frame,
+                            priority: 1,
+                            distance: i
+                        });
+                    }
+                }
+                
+                // Second priority: Keyframes ahead in the scroll direction
+                for (let i = 1; i <= preloadCount * 2; i++) {
+                    const frame = currentFrame + (i * direction);
+                    if (frame >= 0 && frame < totalFrames && frame % keyframeInterval === 0) {
+                        // Only add if not already in the list
+                        if (!framesToPreload.some(f => f.index === frame)) {
+                            framesToPreload.push({
+                                index: frame,
+                                priority: 2,
+                                distance: i
+                            });
+                        }
+                    }
+                }
+                
+                // Third priority: Some frames in the opposite direction (in case user changes direction)
+                const oppositeDirection = -direction;
+                for (let i = 1; i <= Math.floor(preloadCount / 2); i++) {
+                    const frame = currentFrame + (i * oppositeDirection);
+                    if (frame >= 0 && frame < totalFrames) {
+                        framesToPreload.push({
+                            index: frame,
+                            priority: 3,
+                            distance: i
+                        });
+                    }
+                }
+                
+                // Sort by priority first, then by distance
+                framesToPreload.sort((a, b) => {
+                    if (a.priority !== b.priority) {
+                        return a.priority - b.priority;
+                    }
+                    return a.distance - b.distance;
+                });
+                
+                // Preload the frames in order of priority
+                if (window.requestIdleCallback) {
+                    window.requestIdleCallback(() => {
+                        let preloadedCount = 0;
+                        
+                        for (const frame of framesToPreload) {
+                            // Skip if already loaded
+                            if (images[frame.index]) continue;
+                            
+                            // Limit how many we preload in one go
+                            if (preloadedCount >= 10) break;
+                            
+                            // Use the loadImage function
+                            loadImage(frame.index).then(() => {
+                                preloadedCount++;
+                            }).catch(err => {
+                                // Just log errors, don't stop preloading
+                                console.warn(`Preload warning for frame ${frame.index}: ${err.message}`);
+                            });
+                        }
+                        
+                        console.log(`Intelligent preload initiated for ${preloadedCount} frames`);
+                    });
+                }
+            }
         });
     </script>
     
     <!-- Script to handle the scroll arrow -->
     <script>
         // This script is now integrated into the canvas animation script above
+    </script>
+    <!-- Add our image queue script -->
+    <script src="image-queue.js"></script>
+    
+    <!-- Mobile Console Debugging with Eruda -->
+    <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+        // Initialize Eruda console for mobile debugging
+        // You can access your site with ?debug=true to enable the console
+        // Or remove the condition to always show the console
+        if (window.location.search.indexOf('debug=true') !== -1) {
+            eruda.init();
+        }
+        
+        // Alternative: Uncomment the line below to always enable Eruda
+        // eruda.init();
     </script>
 </body>
 </html> 

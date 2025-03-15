@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Load Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .image-test { margin-bottom: 20px; }
+        img { max-width: 300px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Test</h1>
+    
+    <div class="image-test">
+        <h2>Testing frame_00159.png</h2>
+        <img id="img159" src="Frames/Dynamic/Frames_PNG/frame_00159.png" alt="Frame 159">
+        <p id="status159">Loading...</p>
+    </div>
+    
+    <div class="image-test">
+        <h2>Testing frame_00165.png</h2>
+        <img id="img165" src="Frames/Dynamic/Frames_PNG/frame_00165.png" alt="Frame 165">
+        <p id="status165">Loading...</p>
+    </div>
+    
+    <div class="image-test">
+        <h2>Testing with absolute path</h2>
+        <img id="imgAbs159" src="/Frames/Dynamic/Frames_PNG/frame_00159.png" alt="Frame 159 (absolute)">
+        <p id="statusAbs159">Loading...</p>
+    </div>
+    
+    <script>
+        document.getElementById('img159').onload = function() {
+            document.getElementById('status159').textContent = 'Successfully loaded!';
+            document.getElementById('status159').className = 'success';
+        };
+        
+        document.getElementById('img159').onerror = function() {
+            document.getElementById('status159').textContent = 'Failed to load!';
+            document.getElementById('status159').className = 'error';
+        };
+        
+        document.getElementById('img165').onload = function() {
+            document.getElementById('status165').textContent = 'Successfully loaded!';
+            document.getElementById('status165').className = 'success';
+        };
+        
+        document.getElementById('img165').onerror = function() {
+            document.getElementById('status165').textContent = 'Failed to load!';
+            document.getElementById('status165').className = 'error';
+        };
+        
+        document.getElementById('imgAbs159').onload = function() {
+            document.getElementById('statusAbs159').textContent = 'Successfully loaded!';
+            document.getElementById('statusAbs159').className = 'success';
+        };
+        
+        document.getElementById('imgAbs159').onerror = function() {
+            document.getElementById('statusAbs159').textContent = 'Failed to load!';
+            document.getElementById('statusAbs159').className = 'error';
+        };
+    </script>
+</body>
+</html> 
