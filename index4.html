@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Simple</title>
+    <!-- Add Google Fonts import for Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #fffad6;
+            --secondary-color: #004C97;
+            --text-color: #333333;
+            --light-text: rgba(255, 255, 255, 0.9);
+            --background-dark: #070707;
+            --menu-background: rgba(26, 26, 26, 0.95);
+            --animation-font: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            min-height: 100vh;
+            color: var(--light-text);
+            font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            overflow-y: scroll; /* Change to scroll */
+            margin: 0;
+            padding: 0;
+        }
+
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: transparent;
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+            padding: 1.2rem;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: none;
+            border-bottom: none;
+            box-shadow: none;
+            pointer-events: none; /* Allow clicks to pass through the bar itself */
+            transition: background-color 0.3s ease, background-image 0.3s ease; /* Add transition for smooth effect */
+        }
+
+        /* Add class for solid background when scrolled past animation */
+        .menu-bar.scrolled {
+            background-color: rgba(0, 0, 0, 0.9);
+            background-image: none;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo, .menu-buttons, .menu-button {
+            pointer-events: auto; /* Re-enable clicks on these elements */
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+            margin-left: 2rem;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .logo img {
+            height: 100%;
+            width: auto;
+            filter: brightness(1);
+        }
+
+        .logo-tagline {
+            font-size: 0.7rem;
+            color: var(--light-text);
+            margin-top: 4px;
+            font-family: var(--animation-font);
+            letter-spacing: 0.5px;
+            opacity: 0.85;
+            font-weight: 400;
+            text-transform: uppercase;
+        }
+
+        .logo:hover {
+            opacity: 1;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 2.5rem;
+            margin-right: 2rem;
+        }
+
+        .menu-buttons a {
+            text-decoration: none;
+        }
+
+        .menu-button {
+            background: none;
+            color: var(--light-text);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            opacity: 0.9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: var(--animation-font);
+        }
+
+        .menu-button::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+            box-shadow: 0 0 8px rgba(255, 250, 214, 0.6);
+        }
+
+        .menu-button:hover {
+            color: #fff;
+            opacity: 1;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 5px rgba(255, 250, 214, 0.3);
+        }
+
+        .menu-button:hover::after {
+            width: 100%;
+        }
+
+        .menu-button.active {
+            color: #fff;
+            opacity: 1;
+        }
+
+        .menu-button.active::after {
+            width: 100%;
+            background-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 163, 224, 0.4);
+        }
+
+        .main-container {
+            position: relative;
+            width: 100%;
+            /* Increase height to make scrolling slower but ensure full animation */
+            height: calc(100vh * 40);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.9));
+        }
+
+        .content-wrapper.animation-in-progress {
+            height: auto;
+            overflow: visible;
+        }
+
+        .frame-container {
+            width: 60%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; /* Remove padding */
+            overflow: visible; /* Change from hidden to visible */
+            margin: 0; /* Ensure no margin */
+        }
+
+        .frame-section {
+            position: sticky;
+            top: 0; /* Remove top spacing */
+            left: 0;
+            width: 100%;
+            height: 100vh; /* Full viewport height */
+            z-index: 10;
+            overflow: visible; /* Change from hidden to visible */
+            margin: 0; /* Ensure no margin */
+        }
+
+        .frame-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            overflow: visible; /* Add overflow visible */
+        }
+
+        .video-container {
+            width: 60%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .video-section {
+            position: sticky;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 80px);
+            z-index: 10;
+        }
+
+        .video-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-container {
+            width: 40%;
+            height: 100%;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: transparent; /* Change from gradient to transparent */
+            margin: 0;
+        }
+
+        .text-container h2, 
+        .text-container h3,
+        .text-container ul,
+        .text-container li,
+        .text-section h2,
+        .text-section h3,
+        .text-section ul,
+        .text-section li {
+            font-family: var(--animation-font);
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Remove the text shadow that was causing the gray appearance */
+        }
+
+        .text-container ul {
+            list-style: none;
+            padding: 0;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            width: 100%;
+        }
+
+        .text-container h3{
+            font-size: 2.0rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        
+        .text-section {
+            position: absolute;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            max-width: 600px;
+            font-family: var(--animation-font);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: transparent; /* Add transparent background */
+        }
+
+        .text-section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .text-section li {
+            font-family: var(--animation-font);
+            font-size: 2.0rem;
+            color: #fff;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0.5rem 0;
+        }
+
+        .text-section ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-section h2 {
+            width: 100%;
+        }
+        
+        .text-section h3 {
+            width: 100%;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Add styles for frame image */
+        .frame-image {
+            max-width: none; /* Remove max-width constraint */
+            max-height: 100vh; /* Scale to full viewport height */
+            width: auto;
+            height: 100%; /* Set height to 100% */
+            object-fit: contain;
+            border-radius: 0; /* Remove border radius */
+            box-shadow: none; /* Remove shadow */
+            transition: opacity 0.2s ease;
+            margin: 0; /* Ensure no margin */
+        }
+
+        .scroll-text {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--light-text);
+            text-align: center;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50px;
+            opacity: 1;
+            transition: opacity 0.5s;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.3);
+            z-index: 100;
+            font-family: var(--animation-font);
+        }
+
+        .scroll-text.fade-out {
+            opacity: 0;
+        }
+
+        .completion-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--light-text);
+            text-align: center;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50px;
+            opacity: 1;
+            transition: opacity 0.5s;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.3);
+            z-index: 100;
+            font-family: var(--animation-font);
+        }
+
+        .completion-message.fade-out {
+            opacity: 0;
+        }
+
+        h2 {
+            font-family: var(--animation-font);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            width: 100%;
+        }
+
+        .text-section h3 {
+            text-align: right;
+            width: 100%;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: var(--light-text);
+            font-weight: 300;
+            opacity: 0.9;
+            font-family: var(--animation-font);
+        }
+
+        @media (max-width: 768px) {
+            /* Menu adjustments */
+            .menu-bar {
+                padding: 0.8rem 1rem; /* Add more horizontal padding */
+                flex-direction: row; /* Change from column to row */
+                gap: 0.8rem;
+                background-color: transparent;
+                background-image: none; /* Remove gradient background */
+                backdrop-filter: none;
+                border-bottom: none;
+                box-shadow: none;
+                justify-content: space-between; /* Ensure space between logo and menu */
+                align-items: center;
+                width: 100%;
+            }
+            
+            /* Ensure scrolled state works on mobile */
+            .menu-bar.scrolled {
+                background-color: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            }
+
+            .logo {
+                height: 30px;
+                margin-left: 0;
+                align-items: flex-start; /* Align logo content to the left */
+                max-width: 50%; /* Ensure logo doesn't take too much space */
+            }
+            
+            .logo-tagline {
+                font-size: 0.55rem; /* Make slightly smaller */
+                margin-top: 2px;
+                letter-spacing: 0.3px; /* Adjust letter spacing */
+                white-space: nowrap; /* Prevent wrapping */
+            }
+
+            .menu-buttons {
+                flex-wrap: wrap;
+                justify-content: flex-end; /* Align to the right */
+                gap: 0.3rem; /* Reduce gap for mobile */
+                margin-right: 0;
+                max-width: 50%; /* Ensure menu doesn't take too much space */
+            }
+
+            .menu-button {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+            }
+
+            /* Frame section adjustments for mobile */
+            .frame-section {
+                top: 0; /* Remove top spacing */
+                height: 100vh; /* Full viewport height */
+                margin: 0; /* Ensure no margin */
+                padding-top: 60px; /* Add padding to create space below the menu bar */
+            }
+
+            .frame-content {
+                flex-direction: column;
+            }
+
+            .frame-container {
+                width: 100%;
+                height: 65%;
+                padding: 0; /* Remove padding */
+                margin: 0; /* Ensure no margin */
+            }
+
+            /* Text container adjustments for mobile */
+            .text-container {
+                width: 100%;
+                height: 35%;
+                padding: 0 1.5rem; /* Add horizontal padding */
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95)); /* Keep background on mobile */
+                overflow: visible; /* Remove scrolling capability */
+                position: relative;
+                display: flex;
+                justify-content: center;
+                margin: 0; /* Ensure no margin */
+            }
+            
+            /* Adjust text sections for mobile */
+            .text-section {
+                position: absolute;
+                padding: 1rem 1.5rem; /* Ensure consistent horizontal padding */
+                max-width: 100%;
+                opacity: 0;
+                transform: translateY(30px);
+                transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                height: auto;
+                max-height: 100%;
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background: transparent; /* Keep transparent on mobile too */
+            }
+            
+            /* Auto-scaling for sections with more content */
+            .text-section[data-scroll="0.4"], 
+            .text-section[data-scroll="0.55"],
+            .text-section[data-scroll="0.75"] {
+                transform-origin: center;
+                font-size: 0.9em;
+            }
+            
+            .text-section.active {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            
+            /* Adjust list styling for mobile */
+            .text-section ul,
+            .text-container ul {
+                padding-left: 0; /* Remove left padding to ensure proper centering */
+                margin-bottom: 0.8rem;
+                margin-top: 0.5rem;
+            }
+            
+            .text-section li,
+            .text-container li {
+                margin-bottom: 0.3rem;
+                font-size: 0.85rem;
+                line-height: 1.3;
+            }
+
+            /* Ensure frame image is properly sized for mobile */
+            .frame-image {
+                max-width: 100%;
+                height: 100%; /* Use full height of container */
+                width: auto; /* Allow width to adjust based on aspect ratio */
+                margin: 0; /* Ensure no margin */
+                border-radius: 0; /* Remove border radius */
+                box-shadow: none; /* Remove shadow */
+            }
+
+            /* Typography adjustments */
+            h2 {
+                font-family: var(--animation-font);
+                font-size: 1.6rem;
+                margin-bottom: 0.8rem;
+                line-height: 1.3;
+                font-weight: 300; /* Ensure consistent font weight */
+            }
+
+            h2[style*="font-weight:bold"] {
+                font-size: 1.8rem;
+                font-weight: 600 !important; /* Force bold weight */
+            }
+
+            h3 {
+                font-size: 1.3rem;
+                margin-bottom: 0.7rem;
+                line-height: 1.3;
+            }
+
+            .text-section h3 {
+                font-size: 1.3rem;
+            }
+
+            .text-section[data-scroll="0.3"] h2,
+            .text-section[data-scroll="0.4"] h2 {
+                font-size: 1.8rem; /* Restore the font size */
+                font-weight: 600 !important; /* Force bold weight */
+            }
+
+            .text-section[data-scroll="0.3"] h3,
+            .text-section[data-scroll="0.4"] h3 {
+                font-size: 1.3rem;
+                margin-top: 0.3rem;
+            }
+
+            p {
+                font-size: 0.85rem;
+                margin-bottom: 0.8rem;
+                line-height: 1.4;
+            }
+
+            .scroll-text {
+                font-size: 0.8rem;
+                padding: 10px 20px;
+                bottom: 15px;
+            }
+
+            /* Center align text on mobile is now handled by the specific selectors above */
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            .text-section[data-scroll="0.4"], 
+            .text-section[data-scroll="0.55"],
+            .text-section[data-scroll="0.75"] {
+                font-size: 0.8em;
+            }
+            
+            .text-section ul,
+            .text-container ul {
+                padding-left: 1.2rem;
+            }
+            
+            .text-section li,
+            .text-container li {
+                margin-bottom: 0.2rem;
+                font-size: 0.8rem;
+                line-height: 1.2;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 0.6rem;
+            }
+
+            h2[style*="font-weight:bold"] {
+                font-size: 1.7rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Adjust list item sizes for very small screens */
+            .text-section.active li.active-item {
+                font-size: 1.4rem;
+                padding: 0.4rem;
+            }
+            
+            .text-section[data-scroll="0.1"].active li.active-item {
+                font-size: 1.5rem;
+            }
+            
+            /* Additional menu adjustments for very small screens */
+            .menu-bar {
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .logo {
+                height: 25px;
+            }
+            
+            .logo-tagline {
+                font-size: 0.5rem;
+                margin-top: 1px;
+            }
+            
+            .menu-button {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.4rem;
+            }
+            
+            /* Adjust padding for smaller screens */
+            .frame-section {
+                padding-top: 50px; /* Slightly less padding on very small screens */
+            }
+            
+            .text-container {
+                padding: 0 1rem; /* Slightly less horizontal padding */
+            }
+            
+            .text-section {
+                padding: 0.8rem 1rem; /* Consistent with container padding */
+            }
+        }
+
+        /* Contact Form Styles */
+        .contact-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem; /* Reduced from 4rem to 3rem to match news section */
+            margin-top: -2rem; /* Add negative margin to reduce space between sections */
+            background: linear-gradient(to bottom, var(--background-dark), #000);
+            width: 100%;
+            z-index: 20;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3rem;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            font-family: var(--animation-font);
+        }
+
+        .contact-form h2 {
+            margin-bottom: 2rem;
+            text-align: center;
+            font-family: var(--animation-font);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            font-family: var(--animation-font);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--light-text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: var(--animation-font);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 163, 224, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-family: var(--animation-font);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .form-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-message.success {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .form-message.error {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff0000;
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 768px) {
+            .contact-form {
+                padding: 2rem;
+            }
+        }
+
+        /* Mobile layout for frame animation */
+        @media (max-width: 768px) {
+            /* Stack frame content vertically on mobile */
+            .frame-content {
+                flex-direction: column;
+            }
+            
+            /* Make animation container larger */
+            .frame-container {
+                width: 100%;
+                height: 65%;
+                padding: 0; /* Remove padding */
+                margin: 0; /* Ensure no margin */
+            }
+            
+            /* Frame section adjustments for mobile */
+            .frame-section {
+                top: 0; /* Remove top spacing */
+                height: 100vh; /* Full viewport height */
+                margin: 0; /* Ensure no margin */
+                padding-top: 60px; /* Add padding to create space below the menu bar */
+            }
+            
+            /* Text below animation */
+            .text-container {
+                width: 100%;
+                height: 35%;
+                padding: 0 1.5rem; /* Add horizontal padding */
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95)); /* Keep background on mobile */
+                overflow: visible; /* Remove scrolling capability */
+                position: relative;
+                display: flex;
+                justify-content: center;
+                margin: 0; /* Ensure no margin */
+            }
+            
+            /* Ensure frame image is properly sized for mobile */
+            .frame-image {
+                max-width: 100%;
+                height: 100%; /* Use full height of container */
+                width: auto; /* Allow width to adjust based on aspect ratio */
+                margin: 0; /* Ensure no margin */
+                border-radius: 0; /* Remove border radius */
+                box-shadow: none; /* Remove shadow */
+            }
+        }
+
+        /* Add a gradient overlay for mobile view */
+        @media (max-width: 768px) {
+            .frame-container {
+                width: 100%;
+                height: 65%;
+                padding: 0; /* Remove padding */
+                margin: 0; /* Ensure no margin */
+                position: relative; /* Add position relative for the pseudo-element */
+            }
+            
+            /* Add gradient overlay from top */
+            .frame-container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 25%; /* Increase height of the gradient */
+                background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.4) 60%, transparent 100%);
+                z-index: 15; /* Above the image but below controls */
+                pointer-events: none; /* Allow clicks to pass through */
+            }
+            
+            .frame-image {
+                max-width: 100%;
+                max-height: 100%; /* Use full height */
+                margin: 0; /* Ensure no margin */
+                border-radius: 0; /* Remove border radius */
+                box-shadow: none; /* Remove shadow */
+            }
+        }
+
+        /* Leadership Section Styles */
+        .leadership-section {
+            position: relative;
+            padding: 6rem 2rem;
+            background: linear-gradient(to bottom, var(--background-dark), #000);
+            min-height: 100vh;
+            z-index: 20;
+        }
+
+        .leadership-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .leadership-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .leadership-header h2 {
+            font-family: var(--animation-font);
+        }
+
+        .leadership-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .team-member {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .team-member img {
+            width: 150px;
+            height: 150px;
+            border-radius: 10%;
+            margin-bottom: 1.5rem;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .team-member:hover img {
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.338);
+        }
+
+        .team-member:hover {
+            transform: scale(1.01);
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.338);
+            border-color: var(--primary-color);
+            z-index: 10;
+        }
+
+        .member-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .member-info::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .member-info::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .member-info::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .team-member:hover .member-info {
+            opacity: 0;
+            visibility: visible;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .member-info h4 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            font-weight: 500;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 1rem 0;
+        }
+
+        .member-info p {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            text-align: left;
+            opacity: 0.9;
+        }
+
+        .member-bio {
+            padding: 0.5rem;
+            margin-top: 0;
+        }
+
+        .member-bio p {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            text-align: left;
+            opacity: 0.9;
+        }
+
+        .team-member h3 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+            font-family: var(--animation-font);
+        }
+
+        .team-member p {
+            color: var(--light-text);
+            font-size: 1rem;
+            opacity: 0.8;
+            font-family: var(--animation-font);
+        }
+
+        @media (max-width: 768px) {
+            .team-member img {
+                width: 120px;
+                height: 120px;
+                margin-bottom: 1rem;
+            }
+            
+            /* Adjust leadership grid for tablets */
+            .leadership-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Adjust leadership grid for mobile */
+            .leadership-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
+
+        .progress-bar-container {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        
+        .frame-counter {
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
+        /* Scroll down arrow indicator */
+        .scroll-arrow {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            z-index: 100;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-arrow:before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 20px;
+            border-right: 3px solid var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            transform: rotate(45deg);
+            box-shadow: 0 0 8px rgba(255, 250, 214, 0.5);
+            border-radius: 2px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0) translateX(-50%);
+            }
+            40% {
+                transform: translateY(-10px) translateX(-50%);
+            }
+            60% {
+                transform: translateY(-5px) translateX(-50%);
+            }
+        }
+
+        /* Hide the arrow when scrolled down */
+        .scroll-arrow.hide {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-arrow {
+                bottom: 20px;
+                width: 25px;
+                height: 25px;
+            }
+
+            .scroll-arrow:before {
+                width: 15px;
+                height: 15px;
+                border-right: 2px solid var(--primary-color);
+                border-bottom: 2px solid var(--primary-color);
+            }
+        }
+
+        /* Ensure only one item is visible at a time on mobile */
+        @media (max-width: 768px) {
+            /* Reset the default behavior for text sections */
+            .text-section.active {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            
+            /* For list sections, hide all list items by default */
+            .text-section.active li {
+                opacity: 0;
+                display: none;
+                transition: opacity 0.5s ease;
+                font-family: var(--animation-font);
+            }
+            
+            /* Only show the active list item */
+            .text-section.active li.active-item {
+                opacity: 1;
+                display: block;
+                font-size: 1.5rem; /* Adjusted from 1.8rem to be smaller than h2 but larger than h3 */
+                text-align: center;
+                margin: 0 auto;
+                padding: 0.5rem;
+                font-family: var(--animation-font);
+            }
+            
+            /* Make list items in specific sections larger */
+            .text-section[data-scroll="0.1"].active li.active-item {
+                font-size: 1.6rem; /* Larger for the first list section */
+            }
+            
+            /* Center the list container on mobile */
+            .text-section[data-scroll="0.1"],
+            .text-section[data-scroll="0.4"],
+            .text-section[data-scroll="0.55"],
+            .text-section[data-scroll="0.75"] {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                padding: 0;
+                margin: 0 auto;
+                width: 100%;
+                height: auto;
+            }
+
+            /* Center align text on mobile is now handled by the specific selectors above */
+        }
+
+        .text-section li.active {
+            opacity: 1;
+        }
+
+        /* Left side text container */
+        .frame-content > .text-container:first-of-type {
+            align-items: flex-start;
+            text-align: left;
+            background: transparent; /* Make background transparent */
+        }
+
+        /* Left side text sections */
+        .frame-content > .text-container:first-of-type .text-section {
+            align-items: flex-start;
+            background: transparent; /* Ensure left text sections are transparent */
+        }
+
+        .frame-content > .text-container:first-of-type h2,
+        .frame-content > .text-container:first-of-type h3,
+        .frame-content > .text-container:first-of-type ul,
+        .frame-content > .text-container:first-of-type li {
+            text-align: left;
+        }
+
+        /* Right side text container (keep as is - already right aligned) */
+        .frame-content > .text-container:last-of-type {
+            align-items: flex-end;
+            text-align: right;
+            padding-right: 2rem; /* Add right padding to ensure text isn't too close to the edge */
+            background: transparent; /* Make background transparent */
+        }
+
+        /* Right side text sections (keep as is - already right aligned) */
+        .frame-content > .text-container:last-of-type .text-section {
+            align-items: flex-end;
+            padding-right: 1rem; /* Add additional padding for text sections */
+            background: transparent; /* Ensure right text sections are transparent */
+        }
+
+        .frame-content > .text-container:last-of-type h2,
+        .frame-content > .text-container:last-of-type h3,
+        .frame-content > .text-container:last-of-type ul,
+        .frame-content > .text-container:last-of-type li {
+            text-align: right;
+            margin-right: 0.5rem; /* Add a small right margin to list items */
+        }
+
+        /* Mobile overrides to center everything on small screens */
+        @media (max-width: 768px) {
+            .frame-content > .text-container:first-of-type,
+            .frame-content > .text-container:last-of-type {
+                text-align: center;
+                align-items: center;
+                padding-right: 0; /* Reset right padding on mobile */
+            }
+
+            .frame-content > .text-container:first-of-type .text-section,
+            .frame-content > .text-container:last-of-type .text-section {
+                align-items: center;
+                padding-right: 0; /* Reset right padding on mobile */
+            }
+
+            .frame-content > .text-container:first-of-type h2,
+            .frame-content > .text-container:first-of-type h3,
+            .frame-content > .text-container:first-of-type ul,
+            .frame-content > .text-container:first-of-type li,
+            .frame-content > .text-container:last-of-type h2,
+            .frame-content > .text-container:last-of-type h3,
+            .frame-content > .text-container:last-of-type ul,
+            .frame-content > .text-container:last-of-type li {
+                text-align: center;
+                margin-right: 0; /* Reset right margin on mobile */
+                margin-left: 0; /* Reset left margin on mobile */
+            }
+        }
+
+        /* Medium screen breakpoint to prevent text overlapping with animation */
+        @media (min-width: 769px) and (max-width: 1400px) {
+            /* Adjust the frame content layout */
+            .frame-content {
+                position: relative;
+                padding: 0;
+                display: flex;
+                justify-content: center; /* Center content horizontally */
+                align-items: center;     /* Center content vertically */
+                overflow: visible;
+                height: 100vh;
+            }
+            
+            /* Animation container positioning - properly centered */
+            .frame-container {
+                position: absolute;
+                width: 60%;          /* Width of animation container */
+                max-width: 800px;    /* Maximum width to prevent it from getting too large */
+                height: auto;        /* Auto height to maintain aspect ratio */
+                top: 50%;           /* Position at vertical center */
+                left: 50%;          /* Position at horizontal center */
+                transform: translate(-50%, -50%); /* Center properly both horizontally and vertically */
+                z-index: 1;         /* Below text containers */
+                overflow: visible;   /* Allow overflow for smoother animations */
+            }
+            
+            /* Canvas adjustments */
+            #frameCanvas, .frame-image {
+                width: 100%;        /* Full width of container */
+                height: auto;       /* Auto height to maintain aspect ratio */
+                object-fit: contain; /* Contain the image */
+                max-height: 80vh;   /* Prevent it from being too tall */
+                display: block;     /* Remove any inline spacing issues */
+                margin: 0 auto;     /* Center the canvas/image */
+            }
+            
+            /* Left container adjustments */
+            .frame-content > .text-container:first-of-type {
+                position: absolute; /* Absolute positioning */
+                width: 25%;        /* Width of left text container */
+                top: 50%;          /* Position at vertical center */
+                left: 5%;          /* Position at left edge with margin */
+                transform: translateY(-50%); /* Center vertically */
+                z-index: 5;        /* Above animation */
+                padding-right: 15px; /* Right padding to prevent text from touching animation */
+                text-align: left;   /* Left align text */
+                background: transparent;
+                height: 80%;       /* Set a fixed height to contain absolute positioned children */
+                overflow: visible; /* Allow sections to be visible outside if needed */
+            }
+            
+            /* Right container adjustments */
+            .frame-content > .text-container:last-of-type {
+                position: absolute; /* Absolute positioning */
+                width: 25%;        /* Width of right text container */
+                top: 50%;          /* Position at vertical center */
+                right: 5%;         /* Position at right edge with margin */
+                transform: translateY(-50%); /* Center vertically */
+                z-index: 5;        /* Above animation */
+                padding-left: 15px; /* Left padding to prevent text from touching animation */
+                text-align: right;  /* Right align text */
+                background: transparent;
+                height: 80%;       /* Set a fixed height to contain absolute positioned children */
+                overflow: visible; /* Allow sections to be visible outside if needed */
+            }
+            
+            /* Fix text animations for medium screens - make them behave like desktop */
+            .text-section {
+                opacity: 0;
+                transform: translateY(calc(-50% + 30px)); /* Combine vertical centering with entrance animation */
+                transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Same transition as desktop */
+                padding: 0.5rem;
+                max-width: 100%;
+                margin-bottom: 0; /* Remove margin to prevent stacking */
+                position: absolute; /* Use absolute positioning like desktop */
+                left: 0;
+                right: 0;
+                top: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            .text-section.active {
+                opacity: 1;
+                transform: translateY(-50%); /* Exactly centered when active */
+                background-color: rgba(0,0,0,0.3); /* Lighter background */
+                border-radius: 4px;
+                padding: 8px;
+            }
+            
+            /* Font size adjustments - keep these for readability */
+            .text-section h2 {
+                font-size: 1.8rem;
+                line-height: 1.2;
+                margin-bottom: 0.3rem;
+                letter-spacing: -0.02em;
+            }
+            
+            .text-section h3 {
+                font-size: 1.2rem;
+                line-height: 1.3;
+                margin-top: 0.2rem;
+                font-weight: 300;
+            }
+            
+            /* List text adjustments - make them appear like desktop */
+            .text-container ul.text-section {
+                padding: 5px;
+            }
+            
+            .text-container ul.text-section li {
+                font-size: 1.1rem;
+                margin-bottom: 3px;
+                padding: 3px 0;
+                opacity: 0;
+                transform: translateY(15px); /* Smaller transform that doesn't affect parent positioning */
+                transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                            transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Same as desktop */
+            }
+            
+            .text-container ul.text-section li.active {
+                opacity: 1;
+                transform: translateY(0); /* Reset transform to normal position */
+            }
+        }
+
+        /* Wrapper around the entire scrolling experience */
+        .content-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+    </style>
+    <link rel="stylesheet" href="modals.css">
+    <link rel="stylesheet" href="news.css">
+</head>
+<body>
+    <div class="menu-bar">
+        <div class="logo">
+            <img src="labsimple-logo-white.png" alt="LabSimple Logo">
+            <div class="logo-tagline">A CLEU Diagnostics Product</div>
+        </div>
+        <div class="menu-buttons">
+        <a href="#" class="menu-button">Home</a>
+        <a href="#leadership" class="menu-button">Leadership</a>
+        <a href="#contact" class="menu-button">Contact</a>
+        </div>
+    </div>
+    <div class="content-wrapper animation-in-progress">
+        <!-- Scroll down arrow indicator -->
+        <div class="scroll-arrow">
+        </div>
+        
+        <div class="main-container">
+            <div class="frame-section">
+                <div class="frame-content">
+                    <div class="text-container">
+                        <div class="text-section" data-scroll="0.0" data-scroll-end="0.05">
+                            <h2>Diagnostics.</h2> <h2><strong>Made Simple.</strong></h2>
+                        </div>
+                        <div class="text-section" data-scroll="0.1" data-scroll-end="0.3">
+                            <h2 style="font-weight:bold">Introducing Solo</h2>
+                            <h3>A Generational Leap in Diagnostics.</h3>
+                        </div>
+                        <div class="text-section extended-time" data-scroll="0.35" data-scroll-end="0.5">
+                            <h2 style="font-weight:bold">At its CORE</h2>
+                            <h3>A Functional Powerhouse</h3>
+                        </div>
+                        <div class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.75">
+                            <h2>Cartridges are</h2>
+                        </div>
+                        <div class="text-section extended-time" data-scroll="0.75" data-scroll-end="0.85">
+                            <h2>Intuitive Clinical Workflow</h2>
+                        </div>
+                        <div class="text-section" data-scroll="0.9" data-scroll-end="1.0">
+                            <h2 style="font-weight:bold">Now In The Palm of Your Hand</h2>
+                        </div>
+                    </div>
+                    <div class="frame-container">
+                        <canvas id="frameCanvas" class="frame-image"></canvas>
+                    </div>
+                    <div class="text-container">
+                        
+                        <ul class="text-section" data-scroll="0.1" data-scroll-end="0.3">
+                            <li class="list-section" data-scroll="0.1">Simple</li>
+                            <li class="list-section" data-scroll="0.12">Portable</li>
+                            <li class="list-section" data-scroll="0.14">Low-Cost</li>
+                            <li class="list-section" data-scroll="0.16">Lab-Quality</li>
+                            <li class="list-section" data-scroll="0.18">Comprehensive</li>
+                        </ul>
+                        <ul class="text-section extended-time" data-scroll="0.35" data-scroll-end="0.5">
+                            <li class="list-section" data-scroll="0.36">Microscopy</li>
+                            <li class="list-section" data-scroll="0.37">Flow Cytometry</li>
+                            <li class="list-section" data-scroll="0.38">Chemistry</li>
+                            <li class="list-section" data-scroll="0.39">Immunoassay</li>
+                            <li class="list-section" data-scroll="0.40">Single Molecule Counting</li>
+                            <li class="list-section" data-scroll="0.41">Molecular Diagnostics</li>
+                            <li class="list-section" data-scroll="0.42">Spectroscopy</li>
+                        </ul>
+                        
+                        <ul class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.75">
+                            <li class="list-section" data-scroll="0.56">Versatile</li>
+                            <li class="list-section" data-scroll="0.57">Easy to Use</li>
+                            <li class="list-section" data-scroll="0.58">Multiplexed</li>
+                            <li class="list-section" data-scroll="0.59">Ultra-Low Cost</li>
+                            <li class="list-section" data-scroll="0.60">Ultra Scalable</li>
+                            <li class="list-section" data-scroll="0.61">Variable Size</li>
+                            <li class="list-section" data-scroll="0.62">Multi-Layered</li>
+                            <li class="list-section" data-scroll="0.63">Roll to roll</li>
+                            <li class="list-section" data-scroll="0.64">Multi Channel</li>
+                            <li class="list-section" data-scroll="0.65">Adaptable</li>
+                            <li class="list-section" data-scroll="0.66" style="font-weight:bold">Simple</li>
+                        </ul>
+
+                        <ul class="text-section extended-time" data-scroll="0.75" data-scroll-end="0.85">
+                            <li class="list-section" data-scroll="0.78">EHR Connected</li>
+                            <li class="list-section" data-scroll="0.79">or</li>
+                            <li class="list-section" data-scroll="0.80">Standalone</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="leadership-section" id="leadership">
+            <div class="leadership-container">
+                <div class="leadership-header">
+                    <h2>Leadership Team</h2>
+                </div>
+                <div class="leadership-grid">
+                    <div class="team-member">
+                        <img src="headshots/Timothy.png" alt="Timothy Ladin">
+                        <h3>Timothy Ladin, JD</h3>
+                        <p>Chairman</p>
+                        <a href="https://www.linkedin.com/in/timothy-ladin-b22a8a3"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Tim Ladin has served as Chairman of the Board of CLEU Diagnostics since 2023. Mr. Ladin served for almost two decades as Vice President, General Counsel, and Chief Compliance Officer of MFP Investors LLC, MFP Partners, L.P., MFP Ventures, LLC, the Price Family Foundation, and related entities of the family office of Michael F. Price. Mr. Ladin also had previous roles as Counsel and Director of Business Development at Heart Corporation, where he engaged in venture capital and private equity investments, as well as mergers & acquisitions in early technology and internet companies, and started his career as a corporate transaction associate attorney at Clifford Chance, Rogers & Wells. In addition to legal, compliance, operations, and tax planning, Mr. Ladin manages a portfolio of venture capital, private equity, real estate and hedge fund investments, and regularly sits on boards to advise on capital financing, governance, mergers & acquisitions, and post-deal monitoring and dispute resolution. He currently serves as a board/committee member or observer for Decisive Point Group, LLC, K2 Integrity Holdings, Inc., Liquidnet Holdings, Inc., Madison Realty Capital Equity Fund I, LLC, Parvizi Surgical Innovations, LLC, and UniteUs, Inc. He received a J.D. from Georgetown University Law School in 1996 and a B.S. in Business Administration from University at Albany in 1993.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Andrew.png" alt="Andrew Fleischman">
+                        <h3>Andrew Fleischman, MD</h3>
+                        <p>Co-Founder, CEO</p>
+                        <a href="https://www.linkedin.com/in/andrew-fleischman-7a612b83"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. Andrew Fleischman is the founding CEO of CLEU Diagnostics, and is responsible for the vision and operations of the company. Dr. Fleischman is an accomplished physician-scientist and life sciences entrepreneur, having founded three successful companies since 2018 which have received over $16 million in funding from National Institute of Health. Dr. Fleischman received a M.D. from Thomas Jefferson University in 2015 and completed residency training in anesthesiology at Thomas Jefferson University Hospital. The inspiration for LabSimple comes from Dr. Fleischman's own hands-on experience working at various health systems in the Philadelphia area. In addition to leading the team in the development of the LabSimple platform, Dr. Fleischman is actively involved in drug discovery and clinical stage drug development. In 2021, Dr. Fleischman led a team of medicinal chemists to discover a breakthrough drug for sickle cell disease, which is now entering human clinical trials. As an experienced founder and company builder, Dr. Fleischman has broad experience in basic and clinical sciences, intellectual property, regulatory strategy and business development.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Javad.png" alt="Javad Parvizi">
+                        <a href="https://www.linkedin.com/in/javad-parvizi-2a0bb9b"></a>
+                        <h3>Javad Parvizi, MD</h3>
+                        <p>Co-Founder, Director</p>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. Javad Parvizi, MD, FRCS, is Co-Founder of CLEU Diagnostics and currently serves as a Director. Dr. Parvizi is a renowned surgeon and scientist with a career spanning over 25 years, most recently as Professor of Orthopedic Surgery at Acibadem University in Istanbul. Dr. Parvizi has earned worldwide recognition for his pioneering work in the management of periprosthetic joint infection and venous thromboembolism. Prior to joining Acibadem University, he served as the Director and Vice Chair of Research at the Rothman Institute. During his illustrious career, he has authored over 1,000 peer-reviewed scientific articles, penned 18 textbooks, and garnered over 100 awards from prestigious medical organizations worldwide. Dr. Parvizi has a stellar track record of securing research funding from prominent institutions, including the National Institutes of Health, Department of Defense, among others. After medical school, Dr. Parvizi completed training in cardiothoracic surgery in Great Britain. He then ventured to the United States in 1995, where he completed residency training in orthopedic surgery at Mayo Clinic. He also completed a prestigious fellowship on the management of hip disorders in young adults under the mentorship of Professor Reinhold Ganz at the Inselspital in Bern, Switzerland. In 2003, Dr. Parvizi joined the Rothman Orthopaedic Institute and held the position of James Edward Professor of Orthopedic Surgery at Sidney Kimmel School of Medicine until September 2023. Dr. Parvizi has served in leadership roles as president of the Musculoskeletal Infection Society (2013), Eastern Orthopedic Association (2018), and American Association of Hip and Knee Surgeons (AAHKS) ( 2023). Dr. Parvizi's dedication to education is exemplified by his training of over 2,000 research and clinical fellows and residents throughout his career. He continues to travel extensively, having visited more than 170 countries to deliver lectures and share his knowledge. His contributions have earned him honorary memberships in numerous global organizations. In 2017, Dr. Parvizi founded Parvizi Surgical Innovation (PSI) LLC, a highly successful incubator and accelerator for developing groundbreaking healthcare products that enhance patient care. CLEU Diagnostics was one of the first companies founded and incubated at Parvizi Surgical Innovation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/David.png" alt="David Kirschman">
+                        <a href="https://www.linkedin.com/in/david-kirschman-md-a4818b6"></a>
+                        <h3>David Kirschman, MD</h3>
+                        <p>Director</p>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. David Kirschman serves as a Director for CLEU Diagnostics. Dr. Kirschman is a former neurosurgeon and distinguished entrepreneur and operator with extensive experience in building medical device companies from product development to commercial sales & distribution. Dr. Kirschman previously founded X-spine Systems (now Xtant Medical), Orthophor (now part of BD), Aerobiotix, and, most recently, Orthomod. He holds over 80 issued US Patents for a wide range of medical devices. Dr. Kirschman received his BS in Biological Sciences from Colorado State University and M.D. from University of Colorado School of Medicine.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Fariba.png" alt="Fariba Kasemkhani">
+                        <h3>Fariba Kasemkhani</h3>
+                        <p>Director, VP of Finance</p>
+                        <a href="#"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Ms. Fariba Kasemkhani is one of the founding members of CLEU Diagnostics and has been with the company since inception. She has served in various leadership positions, including most recently Vice President of Finance. Ms. Kasemkhani is an Electrical Engineer by training with nearly two decades of experience working for IBM leading numerous chip design projects. While working with the Watson team on the Blue Gene series of supercomputers, she was team lead for Compute Chip Blue Gene/L, FPU developer for Blue Gene/P, and technical lead for Link Chip Blue Gene/Q. She has a vast knowledge of verification and debugging of complex ASIC, microprocessors, and semi-custom chip designs. In addition, she was a Logic Designer in Gaming Processor (Xbox 360, Wii and PS3). She was awarded numerous distinctions while working for IBM.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Scott.png" alt="Scott Kellog">
+                        <h3>Scott Kellog, MS, MBA</h3>
+                        <p>Chief Business Officer</p>
+                        <a href="https://www.linkedin.com/in/scott-c-kellogg"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Scott Kellogg serves as Chief Business Officer of CLEU Diagnostics. Mr. Kellogg is an accomplished medical technology executive, with a three-decade career of building first-in-kind life science products for the pharma, biotech, digital health, and medical device industries. Scott has succeeded in building med-tech businesses in digital therapy, ultrasound surgical modalities, non-invasive transdermal diagnostics, neurostimulation, and therapeutic drug-device combinations. An inventor and engineer at heart, Scott has delivered results in fast-paced R&D and product development environments, and is also experienced at handling all matters related to regulatory strategy, clinical operations, GMP manufacturing, and intellectual property. Scott is currently CEO of GEM-Biosciences, a company he co-founded with MIT Professors Robert Langer and Giovanni Traverso. GEM-Biosciences promises to revolutionize treatment for diabetic ulcers with its breakthrough technology for delivery of therapeutic gases to wounds. Scott previously served as CEO at Suono Bio, a company focused on oral and topical delivery of biologics and nucleic acid medicines. Prior to that, Scott served as SVP in charge of medical devices at Akili Interactive Labs, Inc, leading development and FDA clearance / CE certification of a first-in-class therapeutic mobile application for the treatment of pediatric ADHD. Before joining Akili, Scott was a founding team member at Follica Bio, Afferent, Corp., Sontra Medical, Inc., and UltraCision, Inc., serving as VP of Business Operations, VP of Product Development, VP of R&D, and Director of Engineering. Additionally, he served in engineering leadership roles at both Mentor Medical, Inc. and Ethicon Endo-Surgery, Inc., now both part of J&J.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Nigel.png" alt="Nigel Lindner">
+                        <h3>Nigel Lindner, PhD</h3>
+                        <p>Chief Innovation Officer</p>
+                        <a href="https://uk.linkedin.com/in/nigel-lindner-1a07538"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Dr. Nigel Lindner brings a unique blend of scientific, R&D, and commercial expertise to his role as Chief Innovation Officer at CLEU Diagnostics. Nigel has a proven track record of delivering breakthrough products in a variety of industries, most notably professional and consumer diagnostics, having served previously in numerous senior management positions over three decades, including Chief Innovation Officer at LumiraDx, CEO of Swiss Precision Diagnostics, Vice President of Global R&D at Alere Inc, and key strategic roles at Unilever R&D. Dr. Lindner is a renowned expert and distinguished leader in the field of point-of-care diagnostics, serving as key stakeholder to bring about transformative change in the industry. In addition to his role at CLEU Diagnostics, Nigel is also Chairman and Chief Scientific Officer of InVita Intelligence Ltd, a Healthcare Software company. Dr. Lindner received his PhD in Biotechnology from University of Cambridge. B.S. in 1986.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Kam.png" alt="Kam Ghofrani">
+                        <h3>Kam Ghofrani</h3>
+                        <p>Head of Engineering</p>
+                        <a href="https://www.linkedin.com/in/kamghofrani/"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Kam Ghofrani has served as Head of Engineering for LabSimple since 2021. Leveraging his interdisciplinary expertise honed during his Nanotechnology Engineering studies at the University of Waterloo, Kam seamlessly integrates advanced microfluidics, electronics, and control systems into diagnostic devices. With a robust background in research—including pioneering contributions in microfluidics and quantum science—he drives system cohesion from assay development to software-level controls. Prior to LabSimple, Kam co-founded ventures in lab-on-chip technology and biomedical diagnostics, cementing his reputation as a leader in engineering innovation. Passionate about fusing multiple disciplines, he consistently develops compact, efficient solutions that enhance precision and performance in lab automation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Kunj.png" alt="Kunj Patel">
+                        <h3>Kunj Patel, MS</h3>
+                        <p>Project Management</p>
+                        <a href="https://www.linkedin.com/in/kunj-patel211/"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Kunj Patel has served as the Project Manager for LabSimple since 2022, focusing on program development from planning through execution. Kunj also heads quality assurance for in vitro diagnostic (IVD) products at CLEU Diagnostics. Kunj earned both her Bachelor's and Master's degrees in Mechanical Engineering from Embry-Riddle Aeronautical University, where she gained early experience in medical device development projects. She began her career as a Project Design Engineer at a med-tech startup specializing in patient-specific CMF/Orthopedic implants, developing expertise in quality management systems, product development, and business operations. 
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="headshots/Bayan.png" alt="Bayan Mashrequi">
+                        <h3>Bayan Mashrequi, MS</h3>
+                        <p>Lead Product Engineer</p>
+                        <a href="https://www.linkedin.com/in/bmashrequi/"></a>
+                        <div class="member-info">
+                            <div class="member-bio">
+                                <p>
+                                    Bayan Mashrequi has served as Lead Product Engineer for LabSimple since 2022. Bayan focuses on instrument design, system integration, and design for manufacturability. Bayan also has led development of advanced analytics and sensor technologies for the LabSimple core assembly. Bayan earned his Bachelor's degree in Industrial and Manufacturing Engineering from National University of Sciences and Technology and a Master's in Industrial Design from Rhode Island School of Design (RISD), graduating with the Thomas Edison award for his thesis. Passionate about fusing technology across multiple engineering disciplines, he specializes in developing products that optimize spatial efficiency, precision, and seamless integration. Bayan is a master when it comes to miniaturizing complex systems that require high density integration, and his skillset has clearly made its mark on the design of the LabSimple core module.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="news-section">
+            <div class="news-container">
+                <div class="news-header">
+                    <h2>News & Events</h2>
+                </div>
+                <div class="news-list">
+                    <div class="news-item">
+                        <img src="headshots/cropped/Nigel.png" alt="News Image" class="news-image">
+                        <div class="news-details">
+                            <p class="news-date">Wednesday, March 5th, 2025</p>
+                            <h3 class="news-headline">Former Alere and LumiraDx R&D Chief Nigel Lindner Joins CLEU Diagnostics to Launch Revolutionary LabSimple Diagnostic Platform.</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="contact-section" id="contact">
+            <form class="contact-form" id="contactForm" action="https://formsubmit.co/ajax/bd@cleudx.com" method="POST">
+                <h2>Get in Touch</h2>
+                <!-- FormSubmit.co Configuration -->
+                <input type="hidden" name="_subject" value="New Contact Form Submission">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="text" name="_honey" style="display: none;">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">
+                    Send Message
+                    <span class="loading-spinner" style="display: none;"></span>
+                </button>
+                <div class="form-message" id="formMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer with copyright information -->
+    <footer class="footer-section">
+        <div class="footer-container">
+            <div class="copyright">
+                <p>&copy; 2025 CLEU Diagnostics, Inc. All rights reserved.</p>
+                <p>LabSimple™ is a trademark of CLEU Diagnostics, Inc.</p>
+                <p>Contact: <a href="mailto:bd@cleudx.com">bd@cleudx.com</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Leadership Modal Layout -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <span class="prev">&lt;</span>
+            <span class="next">&gt;</span>
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="Member Image">
+                <h3 id="modalName"></h3>
+                <p id="modalTitle"></p>
+                <a id="modalLinkedIn" href="#" target="_blank">LinkedIn</a>
+                <div id="modalBio"></div>
+            </div>
+        </div>
+    </div>
+    <!-- <script src="scroll.js"></script> -->
+    <script src="modals.js"></script>
+    
+    <!-- Canvas Animation Script -->
+    <script>
+        // Ensure page scrolls to top on refresh
+        window.onbeforeunload = function() {
+            window.scrollTo(0, 0);
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM Content Loaded");
+            
+            // Get DOM elements
+            const canvas = document.getElementById('frameCanvas');
+            const context = canvas.getContext('2d');
+            const scrollArrow = document.querySelector('.scroll-arrow');
+            const mainContainer = document.querySelector('.main-container');
+            const textSections = document.querySelectorAll('.text-section');
+            const listItems = document.querySelectorAll('.list-section');
+            const menuBar = document.querySelector('.menu-bar');
+            
+            // Animation configuration
+            const totalFrames = 1050; // Total frames in the scroll animation (Dynamic folder)
+            const loopFrames = 150;   // Total frames in the static loop animation (Static folder)
+            const loopFrameRate = 30; // Frames per second for the loop animation
+            const scrollTopThreshold = 50; // Threshold in pixels to consider as "top" for restarting animation
+            const scrollSensitivity = 1.0; // Adjust this value to make scrolling more or less sensitive (higher = less sensitive)
+            
+            // Animation state
+            let loopImages = [];
+            let images = new Array(totalFrames); // Replace dynamicImages with a simple array
+            let imagesLoaded = 0;
+            let isScrolling = false;  // Flag to track if user has started scrolling
+            let loopAnimationId = null; // To store the animation frame ID
+            let currentLoopFrame = 0;  // Current frame in the loop animation
+            let lastScrollTop = 0;     // Last scroll position
+            let currentFrameIndex = 0; // Track current frame
+            let hasScrolledAway = false; // Flag to track if user has scrolled away from top
+            let isAtTop = true; // Flag to track if user is at the top
+            let loopAnimationActive = false; // Flag to track if loop animation is currently active
+            let hasBeenAtTop = false; // Flag to track if user has been at the top and then scrolled away
+            
+            // Make the main container taller to control scrolling speed 
+            mainContainer.style.height = 'calc(100vh * 26.7)'; // This controls scroll sensitivity
+            
+            // Initialize canvas size with a default size until first image loads
+            canvas.width = 800;
+            canvas.height = 600;
+            
+            // Load a specific image
+            const loadImage = (index) => {
+                return new Promise((resolve, reject) => {
+                    if (images[index]) {
+                        resolve(images[index]);
+                        return;
+                    }
+                    
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        images[index] = img;
+                        
+                        // Set canvas size based on first image
+                        if (index === 0 && canvas.width === 800) {
+                            const scaleFactor = window.innerHeight / img.height;
+                            canvas.width = img.width * scaleFactor;
+                            canvas.height = window.innerHeight;
+                        }
+                        
+                        resolve(img);
+                    };
+                    
+                    img.onerror = () => {
+                        console.error(`Failed to load image: Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`);
+                        reject(new Error(`Failed to load image: Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`));
+                    };
+                    
+                    img.src = `Frames/Dynamic/frame_${String(index).padStart(5, '0')}.webp`;
+                });
+            };
+            
+            // Load images in batches
+            const loadBatch = async (startIndex, count) => {
+                const promises = [];
+                for (let i = 0; i < count; i++) {
+                    if (startIndex + i < totalFrames) {
+                        promises.push(loadImage(startIndex + i));
+                    }
+                }
+                
+                await Promise.all(promises);
+                
+                // Load next batch
+                if (startIndex + count < totalFrames) {
+                    loadBatch(startIndex + count, 20);
+                }
+            };
+            
+            // Draw a specific frame to the canvas
+            const drawFrame = (index) => {
+                if (images[index] && images[index].complete) {
+                    // Clear canvas
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw the image centered and scaled to fill height
+                    const scaleFactor = canvas.height / images[index].height;
+                    const scaledWidth = images[index].width * scaleFactor;
+                    const xOffset = (canvas.width - scaledWidth) / 2;
+                    
+                    context.drawImage(
+                        images[index],
+                        xOffset, 0,
+                        scaledWidth, canvas.height
+                    );
+                    
+                    currentFrameIndex = index;
+                } else {
+                    // If image isn't loaded yet, load it
+                    loadImage(index).then(() => drawFrame(index));
+                }
+            };
+            
+            // Function to draw an image to the canvas with proper scaling
+            function drawImageToCanvas(img) {
+                if (!img || !img.complete) return;
+                
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculate scaling to fill viewport height
+                const scaleFactor = canvas.height / img.height;
+                const scaledWidth = img.width * scaleFactor;
+                
+                // Center the image horizontally if needed
+                const xOffset = (canvas.width - scaledWidth) / 2;
+                
+                // Draw the image scaled to fill height
+                context.drawImage(
+                    img,
+                    xOffset, 0,
+                    scaledWidth, canvas.height
+                );
+            }
+            
+            // Function to load the first image and set up canvas dimensions
+            function loadFirstImage() {
+                console.log("Loading first image from Static folder");
+                
+                const img = new Image();
+                img.onload = function() {
+                    // Adjust canvas size to match image aspect ratio
+                    // Scale to fill the viewport height
+                    const viewportHeight = window.innerHeight;
+                    const scaleFactor = viewportHeight / img.height;
+                    
+                    canvas.height = viewportHeight;
+                    canvas.width = img.width * scaleFactor;
+                    
+                    // Draw the image
+                    drawImageToCanvas(img);
+                    
+                    // Start preloading loop frames
+                    preloadLoopFrames();
+                    
+                    // Also start preloading dynamic frames
+                    preloadInitialDynamicFrames();
+                    
+                    // Add window resize handler
+                    window.addEventListener('resize', () => {
+                        const newViewportHeight = window.innerHeight;
+                        const newScaleFactor = newViewportHeight / img.height;
+                        
+                        canvas.height = newViewportHeight;
+                        canvas.width = img.width * newScaleFactor;
+                        
+                        // Redraw current frame with new dimensions
+                        if (isScrolling) {
+                            drawFrame(currentFrameIndex);
+                        } else if (loopImages[currentLoopFrame]) {
+                            drawImageToCanvas(loopImages[currentLoopFrame]);
+                        }
+                    });
+                };
+                
+                img.onerror = function() {
+                    console.error("Failed to load first image: Frames/Static/frame_00000.png");
+                };
+                
+                img.src = "Frames/Static/frame_00000.png";
+                loopImages[0] = img;
+            }
+            
+            // Preload loop animation frames
+            function preloadLoopFrames() {
+                console.log("Preloading loop frames from Static folder");
+                
+                for (let i = 1; i < loopFrames; i++) {
+                    const img = new Image();
+                    
+                    img.onload = function() {
+                        imagesLoaded++;
+                        
+                        // Start animation when all frames are loaded
+                        if (imagesLoaded >= loopFrames - 1) {
+                            console.log("All loop frames loaded, starting animation");
+                            playLoopAnimation();
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error(`Failed to load image: Frames/Static/frame_${i.toString().padStart(5, '0')}.png`);
+                    };
+                    
+                    img.src = `Frames/Static/frame_${i.toString().padStart(5, '0')}.png`;
+                    loopImages[i] = img;
+                }
+            }
+            
+            // Preload initial dynamic frames for smoother transition
+            function preloadInitialDynamicFrames() {
+                console.log("Preloading initial dynamic frames");
+                // Load first batch of images to start
+                loadBatch(0, 20);
+            }
+            
+            // Function to play the looping animation
+            function playLoopAnimation() {
+                // Set active flag
+                loopAnimationActive = true;
+                
+                // Stop the animation if user has started scrolling and not at the top
+                if (isScrolling && window.scrollY > scrollTopThreshold) {
+                    clearTimeout(loopAnimationId);
+                    cancelAnimationFrame(loopAnimationId);
+                    loopAnimationActive = false;
+                    return;
+                }
+                
+                // Draw the current frame
+                if (loopImages[currentLoopFrame] && loopImages[currentLoopFrame].complete) {
+                    drawImageToCanvas(loopImages[currentLoopFrame]);
+                }
+                
+                // Increment frame counter and loop back to start if needed
+                currentLoopFrame = (currentLoopFrame + 1) % loopFrames;
+                
+                // Schedule the next frame
+                loopAnimationId = setTimeout(() => {
+                    requestAnimationFrame(playLoopAnimation);
+                }, 1000 / loopFrameRate);
+            }
+            
+            // Function to stop all animations
+            function stopAllAnimations() {
+                // Stop the loop animation
+                if (loopAnimationId) {
+                    clearTimeout(loopAnimationId);
+                    cancelAnimationFrame(loopAnimationId);
+                    loopAnimationId = null;
+                }
+                
+                loopAnimationActive = false;
+            }
+            
+            // Function to restart the loop animation
+            function restartLoopAnimation() {
+                console.log("Restarting loop animation");
+                
+                // Stop any ongoing animations
+                stopAllAnimations();
+                
+                // Reset animation state
+                isScrolling = false;
+                isAtTop = true;
+                
+                // Do not reset hasScrolledAway flag completely - instead set hasBeenAtTop 
+                // to indicate we've been at the top and might scroll away again
+                hasBeenAtTop = true;
+                
+                // Reset loop frame to beginning
+                currentLoopFrame = 0;
+                
+                // Start the loop animation
+                playLoopAnimation();
+                
+                // Show the scroll arrow again
+                scrollArrow.classList.remove('hide');
+                
+                // Function to update text sections based on scroll position
+                function updateTextSections(scrollRatio) {
+                    // Process each text section
+                    textSections.forEach(section => {
+                        const startPosition = parseFloat(section.dataset.scroll || 0);
+                        const endPosition = parseFloat(section.dataset.scrollEnd || (startPosition + 0.1));
+                        
+                        // Use the same visibility logic for both desktop and medium screens
+                        // This makes medium screens behave more like desktop
+                        const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
+                        
+                        // Medium screen special handling (769px - 1400px)
+                        if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                            // Apply active class based on visibility - just like desktop
+                            if (isVisible) {
+                                section.classList.add('active');
+                                // Reset inline styles to let CSS handle animations
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            } else {
+                                section.classList.remove('active');
+                                // Reset any custom styles
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            }
+                        } else {
+                            // Mobile and large screen handling (unchanged)
+                            if (isVisible) {
+                                section.classList.add('active');
+                                // Reset any custom styles
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            } else {
+                                section.classList.remove('active');
+                                // Reset any custom styles
+                                section.style.opacity = '';
+                                section.style.transform = '';
+                            }
+                        }
+                        
+                        // For list sections, handle items sequentially regardless of screen size
+                        const sectionItems = section.querySelectorAll('li');
+                        if (sectionItems.length > 0) {
+                            // Use the same approach for list items on medium screens as desktop
+                            if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                                // Apply desktop-like behavior to medium screens
+                                sectionItems.forEach((item, index) => {
+                                    const itemScrollValue = parseFloat(item.dataset.scroll);
+                                    
+                                    // Simple visibility check like desktop - based on parent section visibility
+                                    if (isVisible && scrollRatio >= itemScrollValue) {
+                                        item.classList.add('active');
+                                        
+                                        // Keep the staggered animation, but simplify it
+                                        const delay = index * 100; // 100ms delay between items
+                                        item.style.transitionDelay = `${delay}ms`;
+                                    } else {
+                                        item.classList.remove('active');
+                                        item.style.transitionDelay = '0ms';
+                                    }
+                                });
+                            } else {
+                                // Mobile and large screens - unchanged
+                                sectionItems.forEach(item => {
+                                    const itemScrollValue = parseFloat(item.dataset.scroll);
+                                    
+                                    if (isVisible && scrollRatio >= itemScrollValue) {
+                                        item.classList.add('active');
+                                        
+                                        // For mobile, only show the most recent item
+                                        if (window.innerWidth <= 768) {
+                                            // Remove active-item from all items first
+                                            sectionItems.forEach(i => i.classList.remove('active-item'));
+                                            // Add to the most recent one
+                                            item.classList.add('active-item');
+                                        }
+                                    } else {
+                                        item.classList.remove('active');
+                                        if (window.innerWidth <= 768) {
+                                            item.classList.remove('active-item');
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Function to start the scroll animation
+            function startScrollAnimation() {
+                console.log('Starting scroll animation');
+                if (loopAnimationActive) {
+                    stopAllAnimations();
+                }
+                
+                isScrolling = true;
+                
+                // Update based on current scroll position
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                const frameNumber = Math.floor(scrollRatio * totalFrames);
+                
+                // Draw the frame
+                drawFrame(frameNumber);
+                
+                // Update text sections
+                updateTextSections(scrollRatio);
+            }
+            
+            // Preload nearby frames
+            function preloadNearbyFrames(currentFrame) {
+                // Define the lookahead distances
+                const lookAhead = 16;
+                const lookBehind = 6;
+                
+                // Determine scroll direction (default forward)
+                const direction = (window.scrollY > lastScrollTop) ? 1 : -1;
+                lastScrollTop = window.scrollY;
+                
+                // Prioritize preloading frames in scroll direction
+                for (let i = 1; i <= lookAhead; i++) {
+                    const nextFrame = currentFrame + (i * direction);
+                    if (nextFrame >= 0 && nextFrame < totalFrames) {
+                        loadImage(nextFrame);
+                    }
+                }
+                
+                // Also preload a few frames in the opposite direction
+                for (let i = 1; i <= lookBehind; i++) {
+                    const prevFrame = currentFrame - (i * direction);
+                    if (prevFrame >= 0 && prevFrame < totalFrames) {
+                        loadImage(prevFrame);
+                    }
+                }
+            }
+            
+            // Throttle function to limit how often a function can fire
+            function throttle(func, delay) {
+                let lastCall = 0;
+                return function(...args) {
+                    const now = performance.now();
+                    if (now - lastCall >= delay) {
+                        lastCall = now;
+                        return func.apply(this, args);
+                    }
+                };
+            }
+            
+            // Debounce function for events that should wait until activity stops
+            function debounce(callback, delay) {
+                let timeout;
+                
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => callback.apply(this, args), delay);
+                };
+            }
+            
+            // Handle scroll events with simple throttling
+            const simpleScrollHandler = throttle(function() {
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                
+                // Check if user is at the top
+                const wasAtTop = isAtTop;
+                isAtTop = window.scrollY <= scrollTopThreshold;
+                
+                // Check if user has scrolled away from top
+                if (!hasScrolledAway && window.scrollY > scrollTopThreshold) {
+                    hasScrolledAway = true;
+                }
+                
+                // Check if user has scrolled back to top after scrolling away
+                if (hasScrolledAway && isAtTop) {
+                    console.log('User scrolled back to top, restarting loop animation');
+                    if (!loopAnimationActive) {
+                        restartLoopAnimation();
+                    }
+                    return;
+                }
+                
+                // Check if user was at top and now scrolling down again
+                if ((wasAtTop && !isAtTop) || (hasBeenAtTop && !isAtTop && !isScrolling)) {
+                    console.log('User was at top and now scrolling down, starting scroll animation');
+                    hasBeenAtTop = false; // Reset this flag
+                    startScrollAnimation();
+                }
+                
+                // Only update frame based on scroll if user has started scrolling
+                if (isScrolling && !isAtTop) {
+                    // Calculate frame number based on scroll position
+                    const frameNumber = Math.min(
+                        totalFrames - 1, 
+                        Math.floor(scrollRatio * totalFrames)
+                    );
+                    
+                    // Only update if the frame has changed
+                    if (frameNumber !== currentFrameIndex) {
+                        // Draw the frame
+                        drawFrame(frameNumber);
+                        
+                        // Preload nearby frames
+                        if (frameNumber % 5 === 0) { // Only preload every 5 frames for performance
+                            setTimeout(() => preloadNearbyFrames(frameNumber), 10);
+                        }
+                    }
+                    
+                    // Update text sections
+                    updateTextSections(scrollRatio);
+                }
+            }, 12); // ~83fps
+            
+            // Handle scroll events - simple and responsive
+            window.addEventListener('scroll', simpleScrollHandler, { passive: true });
+            
+            // Start by loading the first image
+            loadFirstImage();
+            
+            // Improved throttle function with leading and trailing options
+            function throttle(callback, delay, options = { leading: true, trailing: true }) {
+                let timeout = null;
+                let lastCall = 0;
+                let lastArgs = null;
+                
+                return function(...args) {
+                    const now = Date.now();
+                    const remaining = delay - (now - lastCall);
+                    
+                    lastArgs = args;
+                    
+                    // Execute immediately if leading edge or enough time has passed
+                    if (options.leading && (remaining <= 0 || remaining > delay)) {
+                        if (timeout) {
+                            clearTimeout(timeout);
+                            timeout = null;
+                        }
+                        lastCall = now;
+                        callback.apply(this, args);
+                    } else if (options.trailing && !timeout) {
+                        // Schedule a trailing call
+                        timeout = setTimeout(() => {
+                            lastCall = options.leading ? Date.now() : 0;
+                            timeout = null;
+                            callback.apply(this, lastArgs);
+                        }, remaining > 0 ? remaining : delay);
+                    }
+                };
+            }
+            
+            // Debounce function for events that should wait until activity stops
+            function debounce(callback, delay) {
+                let timeout;
+                
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => callback.apply(this, args), delay);
+                };
+            }
+            
+            // Handle scroll events with improved throttling
+            const newHandleScroll = throttle(function() {
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                
+                // Check if user is at the top
+                const wasAtTop = isAtTop;
+                isAtTop = window.scrollY <= scrollTopThreshold;
+                
+                // Check if user has scrolled away from top
+                if (!hasScrolledAway && window.scrollY > scrollTopThreshold) {
+                    hasScrolledAway = true;
+                }
+                
+                // Check if user has scrolled back to top after scrolling away
+                if (hasScrolledAway && isAtTop) {
+                    console.log('User scrolled back to top, restarting loop animation');
+                    if (!loopAnimationActive) {
+                        restartLoopAnimation();
+                    }
+                    return;
+                }
+                
+                // Check if user was at top and now scrolling down again
+                if ((wasAtTop && !isAtTop) || (hasBeenAtTop && !isAtTop && !isScrolling)) {
+                    console.log('User was at top and now scrolling down, starting scroll animation');
+                    hasBeenAtTop = false; // Reset this flag
+                    startScrollAnimation();
+                }
+                
+                // Only update frame based on scroll if user has started scrolling
+                if (isScrolling && !isAtTop) {
+                    const frameNumber = calculateScrollFrame();
+                    loadAndDrawScrollFrame(frameNumber);
+                    updateTextSections(scrollRatio);
+                }
+                
+                // Store the current scroll position
+                lastScrollTop = window.scrollY;
+            }, 12, { leading: true, trailing: true }); // 12ms throttle for ~83fps - higher responsiveness
+            
+            // Handle scroll end with debounce
+            const handleScrollEnd = debounce(function() {
+                // Always stop any ongoing animations when scrolling stops
+                if (scrollAnimationId) {
+                    cancelAnimationFrame(scrollAnimationId);
+                    scrollAnimationId = null;
+                    isScrollAnimationRunning = false;
+                }
+                
+                // Clear scroll metrics when scrolling stops to prevent further movement
+                scrollDirection = 0;
+                scrollVelocity = 0;
+                scrollFrameOffset = 0;
+                
+                // Check if user has scrolled back to top
+                if (window.scrollY <= scrollTopThreshold) {
+                    if (hasScrolledAway && !loopAnimationActive) {
+                        console.log('Scroll ended at top, restarting loop animation');
+                        restartLoopAnimation();
+                    }
+                } else if (isScrolling) {
+                    // Calculate the exact frame for the current scroll position WITHOUT any offsets
+                    const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                    const scrollRatio = window.scrollY / scrollHeight;
+                    const exactFrameNumber = Math.floor(scrollRatio * totalFrames);
+                    
+                    // Skip animation and force immediate display of the exact frame
+                    console.log(`Scroll stopped - displaying exact frame: ${exactFrameNumber}`);
+                    loadAndDrawScrollFrame(exactFrameNumber, true);
+                }
+            }, 100); // Reduced from 150ms to 100ms for faster response
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', function() {
+                // Use our new handleScroll instead of the original implementation
+                newHandleScroll();
+                handleScrollEnd();
+            }, { passive: true }); // Passive listener for better performance
+            
+            // Function to find the next section or list item to scroll to
+            function findNextPosition() {
+                // Get current scroll position relative to the total height
+                const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
+                const scrollRatio = window.scrollY / scrollHeight;
+                
+                // First check if we're in a list section with active items
+                const activeListSections = Array.from(textSections).filter(section => 
+                    section.classList.contains('active') && section.querySelectorAll('li').length > 0);
+                
+                if (activeListSections.length > 0) {
+                    // Check if there's a next list item to show
+                    for (const section of activeListSections) {
+                        const sectionScrollValue = parseFloat(section.dataset.scroll);
+                        const items = section.querySelectorAll('li');
+                        const activeItems = Array.from(items).filter(item => item.classList.contains('active'));
+                        
+                        if (activeItems.length > 0) {
+                            // Find the item with the highest data-scroll value
+                            const currentItem = activeItems.reduce((prev, current) => {
+                                return parseFloat(prev.dataset.scroll) > parseFloat(current.dataset.scroll) ? prev : current;
+                            });
+                            
+                            // Find the next item in this section
+                            const currentItemValue = parseFloat(currentItem.dataset.scroll);
+                            let nextItem = null;
+                            
+                            for (const item of items) {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                if (itemScrollValue > currentItemValue && 
+                                    (!nextItem || itemScrollValue < parseFloat(nextItem.dataset.scroll))) {
+                                    nextItem = item;
+                                }
+                            }
+                            
+                            // If we found a next item, return its position
+                            if (nextItem) {
+                                return parseFloat(nextItem.dataset.scroll);
+                            }
+                        }
+                    }
+                }
+                
+                // If no next list item, find the next section
+                // Get all active sections
+                const activeSections = Array.from(textSections).filter(section => 
+                    section.classList.contains('active'));
+                
+                if (activeSections.length > 0) {
+                    // Find the section with the highest data-scroll value that's currently active
+                    const currentSection = activeSections.reduce((prev, current) => {
+                        return parseFloat(prev.dataset.scroll) > parseFloat(current.dataset.scroll) ? prev : current;
+                    });
+                    
+                    // Find the next section
+                    const currentScrollValue = parseFloat(currentSection.dataset.scroll);
+                    let nextSection = null;
+                    
+                    // Find the section with the next highest data-scroll value
+                    for (const section of textSections) {
+                        const sectionScrollValue = parseFloat(section.dataset.scroll);
+                        if (sectionScrollValue > currentScrollValue && 
+                            (!nextSection || sectionScrollValue < parseFloat(nextSection.dataset.scroll))) {
+                            nextSection = section;
+                        }
+                    }
+                    
+                    if (nextSection) {
+                        return parseFloat(nextSection.dataset.scroll);
+                    }
+                }
+                
+                // If we're at the end, go to the first section
+                // Find the section with the lowest data-scroll value
+                let firstSection = textSections[0];
+                for (const section of textSections) {
+                    if (parseFloat(section.dataset.scroll) < parseFloat(firstSection.dataset.scroll)) {
+                        firstSection = section;
+                    }
+                }
+                
+                return parseFloat(firstSection.dataset.scroll);
+            }
+            
+            // Scroll to next animation section or list item when arrow is clicked
+            scrollArrow.addEventListener('click', function() {
+                // Set scrolling flag to true
+                isScrolling = true;
+                hasScrolledAway = true;
+                isAtTop = false;
+                hasBeenAtTop = false;
+                
+                // Stop the loop animation
+                stopAllAnimations();
+                
+                const nextScrollValue = findNextPosition();
+                
+                if (nextScrollValue !== null) {
+                    // Calculate the scroll position based on the data-scroll value
+                    const totalHeight = mainContainer.offsetHeight - window.innerHeight;
+                    const targetScrollPosition = nextScrollValue * totalHeight;
+                    
+                    // Scroll to the position with smooth behavior
+                    window.scrollTo({
+                        top: targetScrollPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+            
+            // Preload nearby frames when idle - improved version
+            function preloadNearbyFrames(currentFrame) {
+                // Define the lookahead direction based on scroll direction
+                // Default to forward (1) if no consistent direction is detected
+                // This ensures we don't flip-flop on tiny scroll changes
+                const direction = (scrollDirection !== 0) ? scrollDirection : 1; 
+                
+                // Use different lookahead distances based on direction
+                // but maintain some consistency even if direction changes temporarily
+                const lookAhead = Math.abs(scrollDirection) > 0 ? 16 : 10; // Double the lookahead frames (was 8)
+                const lookBehind = 6; // Double the lookbehind frames (was 3)
+                
+                if (window.requestIdleCallback) {
+                    window.requestIdleCallback(() => {
+                        // Prioritize preloading frames in scroll direction
+                        for (let i = 1; i <= lookAhead; i++) {
+                            const nextFrame = currentFrame + (i * direction);
+                            if (nextFrame >= 0 && nextFrame < totalFrames && !images[nextFrame]) {
+                                const img = new Image();
+                                img.src = `Frames/Dynamic/frame_${String(nextFrame).padStart(5, '0')}.webp`;
+                                images[nextFrame] = img;
+                            }
+                        }
+                        
+                        // Also preload a few frames in the opposite direction
+                        for (let i = 1; i <= lookBehind; i++) {
+                            const prevFrame = currentFrame - (i * direction);
+                            if (prevFrame >= 0 && prevFrame < totalFrames && !images[prevFrame]) {
+                                const img = new Image();
+                                img.src = `Frames/Dynamic/frame_${String(prevFrame).padStart(5, '0')}.webp`;
+                                images[prevFrame] = img;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Start by loading the first image
+            loadFirstImage();
+            
+            // Show the first text section by default
+            if (textSections.length > 0) {
+                textSections[0].classList.add('active');
+            }
+
+            // Throttle function for events that should not happen too frequently
+            function throttle(callback, delay) {
+                let lastTime = 0;
+                return function(...args) {
+                    const now = Date.now();
+                    if (now - lastTime >= delay) {
+                        callback.apply(this, args);
+                        lastTime = now;
+                    }
+                };
+            }
+            
+            // Function to update text sections based on scroll position
+            function updateTextSections(scrollRatio) {
+                // Process each text section
+                textSections.forEach(section => {
+                    const startPosition = parseFloat(section.dataset.scroll || 0);
+                    const endPosition = parseFloat(section.dataset.scrollEnd || (startPosition + 0.1));
+                    
+                    // Use the same visibility logic for both desktop and medium screens
+                    // This makes medium screens behave more like desktop
+                    const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
+                    
+                    // Medium screen special handling (769px - 1400px)
+                    if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                        // Apply active class based on visibility - just like desktop
+                        if (isVisible) {
+                            section.classList.add('active');
+                            // Reset inline styles to let CSS handle animations
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        } else {
+                            section.classList.remove('active');
+                            // Reset any custom styles
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        }
+                    } else {
+                        // Mobile and large screen handling (unchanged)
+                        if (isVisible) {
+                            section.classList.add('active');
+                            // Reset any custom styles
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        } else {
+                            section.classList.remove('active');
+                            // Reset any custom styles
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        }
+                    }
+                    
+                    // For list sections, handle items sequentially regardless of screen size
+                    const sectionItems = section.querySelectorAll('li');
+                    if (sectionItems.length > 0) {
+                        // Use the same approach for list items on medium screens as desktop
+                        if (window.innerWidth > 768 && window.innerWidth <= 1400) {
+                            // Apply desktop-like behavior to medium screens
+                            sectionItems.forEach((item, index) => {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                
+                                // Simple visibility check like desktop - based on parent section visibility
+                                if (isVisible && scrollRatio >= itemScrollValue) {
+                                    item.classList.add('active');
+                                    
+                                    // Keep the staggered animation, but simplify it
+                                    const delay = index * 100; // 100ms delay between items
+                                    item.style.transitionDelay = `${delay}ms`;
+                                } else {
+                                    item.classList.remove('active');
+                                    item.style.transitionDelay = '0ms';
+                                }
+                            });
+                        } else {
+                            // Mobile and large screens - unchanged
+                            sectionItems.forEach(item => {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                
+                                if (isVisible && scrollRatio >= itemScrollValue) {
+                                    item.classList.add('active');
+                                    
+                                    // For mobile, only show the most recent item
+                                    if (window.innerWidth <= 768) {
+                                        // Remove active-item from all items first
+                                        sectionItems.forEach(i => i.classList.remove('active-item'));
+                                        // Add to the most recent one
+                                        item.classList.add('active-item');
+                                    }
+                                } else {
+                                    item.classList.remove('active');
+                                    if (window.innerWidth <= 768) {
+                                        item.classList.remove('active-item');
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Script to handle the scroll arrow -->
+    <script>
+        // This script is now integrated into the canvas animation script above
+    </script>
+</body>
+</html> 
