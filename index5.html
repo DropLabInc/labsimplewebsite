@@ -220,6 +220,31 @@
             align-items: flex-end;
             padding-right: 2rem;
         }
+        
+        /* Make the right text container text white */
+        .frame-content > .text-container:last-of-type h2,
+        .frame-content > .text-container:last-of-type h3,
+        .frame-content > .text-container:last-of-type ul,
+        .frame-content > .text-container:last-of-type li,
+        .frame-content > .text-container:last-of-type .text-section h2,
+        .frame-content > .text-container:last-of-type .text-section h3,
+        .frame-content > .text-container:last-of-type .text-section ul,
+        .frame-content > .text-container:last-of-type .text-section li {
+            background: none;
+            -webkit-background-clip: initial;
+            -webkit-text-fill-color: #ffffff;
+            color: #ffffff;
+        }
+        
+        /* Make active list items white too */
+        .frame-content > .text-container:last-of-type .text-section li.active,
+        .frame-content > .text-container:last-of-type .text-section li.active-item {
+            background: none;
+            -webkit-background-clip: initial;
+            -webkit-text-fill-color: #ffffff;
+            color: #ffffff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
 
         .video-container {
             width: 60%;
@@ -1508,7 +1533,7 @@
             
             /* For text sections in the right container */
             .frame-content > .text-container:last-of-type .text-section {
-                transform: translateY(-15px);
+                transform: translateY(-50px);
             }
         }
     </style>
@@ -1982,6 +2007,9 @@
             
             // Function to show completion message and scroll to leadership section
             function showCompletionMessage() {
+                // Add black background to menu bar when animation completes
+                menuBar.classList.add('scrolled');
+                
                 // Scroll to leadership section after a brief delay
                 setTimeout(() => {
                     // Scroll to leadership section
@@ -2123,6 +2151,9 @@
                 // Reset animation if user scrolls back above the leadership section
                 // Only do this if we have a valid leadership section position
                 if (animationComplete) {
+                    // Always show black background on menu bar when animation is complete
+                    menuBar.classList.add('scrolled');
+                    
                     // Update leadership position if we don't have it yet
                     if (leadershipSectionPosition <= 0) {
                         const leadershipSection = document.getElementById('leadership');
@@ -2136,6 +2167,9 @@
                     if (leadershipSectionPosition > 0 && window.scrollY < leadershipSectionPosition - window.innerHeight) {
                         console.log('Scrolled above leadership section, resetting animation');
                         animationComplete = false;
+                        
+                        // Remove black background when animation is reset
+                        menuBar.classList.remove('scrolled');
                     }
                 }
                 
@@ -2174,6 +2208,18 @@
                     
                     // Update text sections
                     updateTextSections(scrollRatio);
+                    
+                    // Check if we're near the leadership section to update menu bar appearance
+                    if (leadershipSectionPosition > 0) {
+                        const distanceToLeadership = leadershipSectionPosition - window.scrollY;
+                        if (distanceToLeadership < window.innerHeight * 0.5) {
+                            // We're getting close to leadership section, add black background
+                            menuBar.classList.add('scrolled');
+                        } else {
+                            // We're still in animation area, keep transparent
+                            menuBar.classList.remove('scrolled');
+                        }
+                    }
                 }
             }, 12); // ~83fps
             
