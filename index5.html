@@ -1307,14 +1307,20 @@
         
         /* Active item specifically for mobile view */
         .text-section li.active-item {
-            font-weight: 600;
             opacity: 1;
             transform: translateY(0);
             /* Add a subtle highlight effect */
             background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 5px rgba(255, 250, 214, 0.2);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            /* Remove automatic bold font weight */
+            font-weight: inherit;
+        }
+        
+        /* Only keep bold for items that had style="font-weight:bold" originally */
+        .text-section li[style*="font-weight:bold"].active-item {
+            font-weight: 600;
         }
 
         /* Left side text container */
