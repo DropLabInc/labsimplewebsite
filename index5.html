@@ -206,7 +206,7 @@
             transition: opacity 0.3s ease;
             overflow: visible; /* Add overflow visible */
         }
-        
+
         /* Left text container */
         .frame-content > .text-container:first-of-type {
             justify-content: center;
@@ -252,7 +252,7 @@
             /* Maintain font consistency when active */
             font-family: var(--animation-font);
             font-weight: inherit;
-            font-size: 2.0rem; /* Ensure consistent font size with top text */
+            font-size: 1.5rem; /* Ensure consistent font size with top text */
         }
         
         /* Only keep bold for items that had style="font-weight:bold" originally */
@@ -437,6 +437,7 @@
 
         /* Loading indicator styles */
         #loadingIndicator {
+            display: none; /* Hide the loading indicator */
             position: fixed;
             top: 20px;
             right: 20px;
@@ -455,9 +456,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             min-width: 150px;
         }
         
@@ -1604,10 +1602,10 @@
                             <h2 style="font-weight:bold">At its CORE</h2>
                             <h3>A Functional Powerhouse</h3>
                         </div>
-                        <div class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.75">
+                        <div class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.70">
                             <h2>Cartridges are</h2>
                         </div>
-                        <div class="text-section extended-time" data-scroll="0.75" data-scroll-end="0.85">
+                        <div class="text-section extended-time" data-scroll="0.72" data-scroll-end="0.85">
                             <h2>Intuitive Clinical Workflow</h2>
                         </div>
                         <div class="text-section" data-scroll="0.9" data-scroll-end="1.0">
@@ -1636,24 +1634,24 @@
                             <li class="list-section" data-scroll="0.42">Spectroscopy</li>
                         </ul>
                         
-                        <ul class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.75">
-                            <li class="list-section" data-scroll="0.56">Versatile</li>
-                            <li class="list-section" data-scroll="0.57">Easy to Use</li>
-                            <li class="list-section" data-scroll="0.58">Multiplexed</li>
-                            <li class="list-section" data-scroll="0.59">Ultra-Low Cost</li>
-                            <li class="list-section" data-scroll="0.60">Ultra Scalable</li>
-                            <li class="list-section" data-scroll="0.61">Variable Size</li>
-                            <li class="list-section" data-scroll="0.62">Multi-Layered</li>
-                            <li class="list-section" data-scroll="0.63">Roll to roll</li>
-                            <li class="list-section" data-scroll="0.64">Multi Channel</li>
-                            <li class="list-section" data-scroll="0.65">Adaptable</li>
-                            <li class="list-section" data-scroll="0.66" style="font-weight:bold">Simple</li>
+                        <ul class="text-section extended-time" data-scroll="0.55" data-scroll-end="0.70">
+                            <li class="list-section" data-scroll="0.51">Versatile</li>
+                            <li class="list-section" data-scroll="0.52">Easy to Use</li>
+                            <li class="list-section" data-scroll="0.53">Multiplexed</li>
+                            <li class="list-section" data-scroll="0.54">Ultra-Low Cost</li>
+                            <li class="list-section" data-scroll="0.55">Ultra Scalable</li>
+                            <li class="list-section" data-scroll="0.56">Variable Size</li>
+                            <li class="list-section" data-scroll="0.57">Multi-Layered</li>
+                            <li class="list-section" data-scroll="0.58">Roll to roll</li>
+                            <li class="list-section" data-scroll="0.59">Multi Channel</li>
+                            <li class="list-section" data-scroll="0.60">Adaptable</li>
+                            <li class="list-section" data-scroll="0.61" style="font-weight:bold">Simple</li>
                         </ul>
 
-                        <ul class="text-section extended-time" data-scroll="0.75" data-scroll-end="0.85">
-                            <li class="list-section" data-scroll="0.78">EHR Connected</li>
-                            <li class="list-section" data-scroll="0.79">or</li>
-                            <li class="list-section" data-scroll="0.80">Standalone</li>
+                        <ul class="text-section extended-time" data-scroll="0.72" data-scroll-end="0.85">
+                            <li class="list-section" data-scroll="0.73">EHR Connected</li>
+                            <li class="list-section" data-scroll="0.74">or</li>
+                            <li class="list-section" data-scroll="0.75">Standalone</li>
                         </ul>
                     </div>
                 </div>
@@ -2265,16 +2263,16 @@
                     // Use the same visibility logic for both desktop and medium screens
                     const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
                     
-                    if (isVisible) {
-                        section.classList.add('active');
+                        if (isVisible) {
+                            section.classList.add('active');
                         // Let CSS handle animations with the active class
-                        section.style.opacity = '';
-                        section.style.transform = '';
-                    } else {
-                        section.classList.remove('active');
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        } else {
+                            section.classList.remove('active');
                         // Let CSS handle animations with the active class
-                        section.style.opacity = '';
-                        section.style.transform = '';
+                            section.style.opacity = '';
+                            section.style.transform = '';
                     }
                     
                     // For list sections, handle items sequentially
@@ -2305,11 +2303,11 @@
                                     item.classList.add('active');
                                     
                                     // For mobile, only show the most recent item
-                                    sectionItems.forEach(i => i.classList.remove('active-item'));
-                                    item.classList.add('active-item');
+                                        sectionItems.forEach(i => i.classList.remove('active-item'));
+                                        item.classList.add('active-item');
                                 } else {
                                     item.classList.remove('active');
-                                    item.classList.remove('active-item');
+                                        item.classList.remove('active-item');
                                 }
                             });
                         }
