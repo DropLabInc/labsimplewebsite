@@ -1814,6 +1814,7 @@
             let loopAnimationActive = false; // Flag to track if loop animation is currently active
             let hasBeenAtTop = false; // Flag to track if user has been at the top and then scrolled away
             let animationComplete = false; // Flag to track if the animation is complete
+            let leadershipSectionPosition = 0; // Store the position of the leadership section
             
             // Make the main container taller to control scrolling speed 
             mainContainer.style.height = 'calc(100vh * 26.7)'; // This controls scroll sensitivity
@@ -1941,6 +1942,10 @@
                     // Scroll to leadership section
                     const leadershipSection = document.getElementById('leadership');
                     if (leadershipSection) {
+                        // Update the leadership section position
+                        leadershipSectionPosition = leadershipSection.getBoundingClientRect().top + window.scrollY;
+                        console.log('Updated leadership section position:', leadershipSectionPosition);
+                        
                         leadershipSection.scrollIntoView({ behavior: 'smooth' });
                     }
                 }, 500);
@@ -2033,10 +2038,61 @@
                 };
             }
             
+            // Function to load the first image and set up canvas dimensions
+            function init() {
+                // Load first batch of images to start
+                loadBatch(0, 20);
+                
+                // Get the leadership section position
+                const leadershipSection = document.getElementById('leadership');
+                if (leadershipSection) {
+                    // We need to wait until the DOM is fully rendered to get accurate position
+                    setTimeout(() => {
+                        leadershipSectionPosition = leadershipSection.getBoundingClientRect().top + window.scrollY;
+                        console.log('Leadership section position:', leadershipSectionPosition);
+                    }, 500);
+                }
+                
+                // Add window resize handler
+                window.addEventListener('resize', () => {
+                    // Redraw current frame with new dimensions
+                    if (images[currentFrameIndex]) {
+                        drawFrame(currentFrameIndex);
+                    }
+                    
+                    // Update leadership section position on resize
+                    if (leadershipSection) {
+                        leadershipSectionPosition = leadershipSection.getBoundingClientRect().top + window.scrollY;
+                    }
+                });
+                
+                // Listen for scroll events
+                window.addEventListener('scroll', handleScroll, { passive: true });
+            }
+            
             // Handle scroll events with simple throttling
             const handleScroll = throttle(function() {
                 const scrollHeight = mainContainer.offsetHeight - window.innerHeight;
                 const scrollRatio = window.scrollY / scrollHeight;
+                
+                // Reset animation if user scrolls back above the leadership section
+                // Only do this if we have a valid leadership section position
+                if (animationComplete) {
+                    // Update leadership position if we don't have it yet
+                    if (leadershipSectionPosition <= 0) {
+                        const leadershipSection = document.getElementById('leadership');
+                        if (leadershipSection) {
+                            leadershipSectionPosition = leadershipSection.getBoundingClientRect().top + window.scrollY;
+                            console.log('Updated leadership section position:', leadershipSectionPosition);
+                        }
+                    }
+                    
+                    // Check if we've scrolled above the leadership section
+                    if (leadershipSectionPosition > 0 && window.scrollY < leadershipSectionPosition - window.innerHeight) {
+                        console.log('Scrolled above leadership section, resetting animation');
+                        animationComplete = false;
+                    }
+                }
                 
                 // Skip any processing if animation is complete
                 if (animationComplete) return;
@@ -2086,51 +2142,34 @@
                     // Use the same visibility logic for both desktop and medium screens
                     const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
                     
-                    if (isVisible) {
-                        section.classList.add('active');
-                        section.style.opacity = '';
-                        section.style.transform = '';
-                    } else {
-                        section.classList.remove('active');
-                        section.style.opacity = '';
-                        section.style.transform = '';
+                        if (isVisible) {
+                            section.classList.add('active');
+                            section.style.opacity = '';
+                            section.style.transform = '';
+                        } else {
+                            section.classList.remove('active');
+                            section.style.opacity = '';
+                            section.style.transform = '';
                     }
                     
                     // For list sections, handle items sequentially
                     const sectionItems = section.querySelectorAll('li');
                     if (sectionItems.length > 0) {
-                        sectionItems.forEach((item, index) => {
-                            const itemScrollValue = parseFloat(item.dataset.scroll);
-                            
-                            if (isVisible && scrollRatio >= itemScrollValue) {
-                                item.classList.add('active');
-                                const delay = index * 100; // 100ms delay between items
-                                item.style.transitionDelay = `${delay}ms`;
-                            } else {
-                                item.classList.remove('active');
-                                item.style.transitionDelay = '0ms';
-                            }
-                        });
-                    }
-                });
-            }
-            
-            // Function to load the first image and set up canvas dimensions
-            function init() {
-                // Load first batch of images to start
-                loadBatch(0, 20);
-                
-                // Add window resize handler
-                window.addEventListener('resize', () => {
-                    // Redraw current frame with new dimensions
-                    if (images[currentFrameIndex]) {
-                        drawFrame(currentFrameIndex);
-                    }
-                });
-                
-                // Listen for scroll events
-                window.addEventListener('scroll', handleScroll, { passive: true });
-            }
+                            sectionItems.forEach((item, index) => {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                
+                                if (isVisible && scrollRatio >= itemScrollValue) {
+                                    item.classList.add('active');
+                                    const delay = index * 100; // 100ms delay between items
+                                    item.style.transitionDelay = `${delay}ms`;
+                                } else {
+                                    item.classList.remove('active');
+                                    item.style.transitionDelay = '0ms';
+                                }
+                            });
+                                }
+                            });
+                        }
             
             // Start initialization
             init();
