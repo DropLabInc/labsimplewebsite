@@ -206,6 +206,20 @@
             transition: opacity 0.3s ease;
             overflow: visible; /* Add overflow visible */
         }
+        
+        /* Left text container */
+        .frame-content > .text-container:first-of-type {
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: 2rem;
+        }
+        
+        /* Right text container */
+        .frame-content > .text-container:last-of-type {
+            justify-content: center;
+            align-items: flex-end;
+            padding-right: 2rem;
+        }
 
         .video-container {
             width: 60%;
@@ -308,8 +322,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             opacity: 0;
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             margin: 0.5rem 0;
+        }
+
+        .text-section li.active {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .text-section ul {
@@ -1259,6 +1279,18 @@
         .text-section li.active {
             opacity: 1;
         }
+        
+        /* Active item specifically for mobile view */
+        .text-section li.active-item {
+            font-weight: 600;
+            opacity: 1;
+            transform: translateY(0);
+            /* Add a subtle highlight effect */
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 5px rgba(255, 250, 214, 0.2);
+        }
 
         /* Left side text container */
         .frame-content > .text-container:first-of-type {
@@ -1465,6 +1497,19 @@
             width: 100%;
             height: 100vh;
             overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            /* Position the right text container (bottom text) higher on mobile */
+            .frame-content > .text-container:last-of-type {
+                transform: translateY(-15px);
+                padding-bottom: 15px;
+            }
+            
+            /* For text sections in the right container */
+            .frame-content > .text-container:last-of-type .text-section {
+                transform: translateY(-15px);
+            }
         }
     </style>
     <link rel="stylesheet" href="modals.css">
@@ -2142,24 +2187,30 @@
                     // Use the same visibility logic for both desktop and medium screens
                     const isVisible = (scrollRatio >= startPosition && scrollRatio <= endPosition);
                     
-                        if (isVisible) {
-                            section.classList.add('active');
-                            section.style.opacity = '';
-                            section.style.transform = '';
-                        } else {
-                            section.classList.remove('active');
-                            section.style.opacity = '';
-                            section.style.transform = '';
+                    if (isVisible) {
+                        section.classList.add('active');
+                        // Let CSS handle animations with the active class
+                        section.style.opacity = '';
+                        section.style.transform = '';
+                    } else {
+                        section.classList.remove('active');
+                        // Let CSS handle animations with the active class
+                        section.style.opacity = '';
+                        section.style.transform = '';
                     }
                     
                     // For list sections, handle items sequentially
                     const sectionItems = section.querySelectorAll('li');
                     if (sectionItems.length > 0) {
+                        // Handle based on device width
+                        if (window.innerWidth > 768) {
+                            // Desktop and tablet behavior
                             sectionItems.forEach((item, index) => {
                                 const itemScrollValue = parseFloat(item.dataset.scroll);
                                 
                                 if (isVisible && scrollRatio >= itemScrollValue) {
                                     item.classList.add('active');
+                                    // Add staggered animation with delay
                                     const delay = index * 100; // 100ms delay between items
                                     item.style.transitionDelay = `${delay}ms`;
                                 } else {
@@ -2167,9 +2218,26 @@
                                     item.style.transitionDelay = '0ms';
                                 }
                             });
+                        } else {
+                            // Mobile-specific behavior
+                            sectionItems.forEach((item, index) => {
+                                const itemScrollValue = parseFloat(item.dataset.scroll);
+                                
+                                if (isVisible && scrollRatio >= itemScrollValue) {
+                                    item.classList.add('active');
+                                    
+                                    // For mobile, only show the most recent item
+                                    sectionItems.forEach(i => i.classList.remove('active-item'));
+                                    item.classList.add('active-item');
+                                } else {
+                                    item.classList.remove('active');
+                                    item.classList.remove('active-item');
                                 }
                             });
                         }
+                    }
+                });
+            }
             
             // Start initialization
             init();
