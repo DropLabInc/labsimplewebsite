@@ -234,6 +234,11 @@
             -webkit-background-clip: initial;
             -webkit-text-fill-color: #ffffff;
             color: #ffffff;
+            /* Ensure consistent font properties */
+            font-family: var(--animation-font);
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
         }
         
         /* Make active list items white too */
@@ -244,6 +249,16 @@
             -webkit-text-fill-color: #ffffff;
             color: #ffffff;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            /* Maintain font consistency when active */
+            font-family: var(--animation-font);
+            font-weight: inherit;
+            font-size: 2.0rem; /* Ensure consistent font size with top text */
+        }
+        
+        /* Only keep bold for items that had style="font-weight:bold" originally */
+        .frame-content > .text-container:last-of-type .text-section li[style*="font-weight:bold"].active-item {
+            font-weight: 600;
+            font-family: var(--animation-font);
         }
 
         .video-container {
@@ -1276,6 +1291,17 @@
                 margin: 0 auto;
                 padding: 0.5rem;
                 font-family: var(--animation-font);
+            }
+            
+            /* Make both top and bottom text containers use consistent font styling on mobile */
+            .text-section.active li.active-item,
+            .frame-content > .text-container:first-of-type .text-section.active li.active-item,
+            .frame-content > .text-container:last-of-type .text-section.active li.active-item {
+                font-size: 1.5rem;
+                font-family: var(--animation-font);
+                text-align: center;
+                padding: 0.5rem;
+                margin: 0 auto;
             }
             
             /* Make list items in specific sections larger */
